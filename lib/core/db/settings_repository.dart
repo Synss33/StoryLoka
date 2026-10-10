@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 
+import '../models/app_settings.dart';
 import 'database_provider.dart';
 
-/// Akses tabel `settings` (wf-02 hanya memakai `biometric_enabled`;
-/// tema, pengingat, dan target bulanan menyusul di WF-04/WF-06).
+/// Akses tabel `settings` (WF-02: `biometric_enabled`; WF-03: `last_sync`
+/// + `updated_at` untuk sinkronisasi; tema/pengingat/target menyusul
+/// WF-04/WF-06).
 class SettingsRepository {
   SettingsRepository(this._db);
 
@@ -36,7 +38,45 @@ class SettingsRepository {
     await ensureRow(userId);
     await _db.update(
       'settings',
-      <String, Object>{'biometric_enabled': enabled ? 1 : 0},
+      <String, Object>{
+        'biometric_enabled': enabled ? 1 : 0,
+        // Perubahan pengaturan wajib memperbarui waktu agar LWW bekerja.
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Membaca seluruh baris pengaturan (untuk payload sinkronisasi).
+  Future<AppSettings?> read(int userId) async {
+    await ensureRow(userId);
+    final rows = await _db.query(
+      'settings',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return AppSettings.fromRow(rows.first);
+  }
+
+  /// Menerapkan pengaturan dari server (dipanggil SyncService setelah LWW
+  /// memutus server menang).
+  Future<void> applyServer(AppSettings settings) async {
+    await _db.insert(
+      'settings',
+      settings.toRow(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Mencatat waktu sinkronisasi terakhir (kolom `last_sync`).
+  Future<void> setLastSync(int userId, int epochMs) async {
+    await ensureRow(userId);
+    await _db.update(
+      'settings',
+      <String, Object>{'last_sync': epochMs},
       where: 'user_id = ?',
       whereArgs: [userId],
     );

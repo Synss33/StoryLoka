@@ -10,7 +10,11 @@ import 'package:sqflite_sqlcipher/sqflite.dart';
 ///   disediakan untuk antrean sinkronisasi (modul WF-03).
 abstract final class AppDatabase {
   /// Versi skema. Setiap perubahan wajib menaikkan nomor + menulis onUpgrade.
-  static const int version = 1;
+  ///
+  /// * v1 = pembuatan awal (WF-01).
+  /// * v2 = `settings.updated_at` agar konflik pengaturan bisa diselesaikan
+  ///   dengan *last-write-wins* sinkronisasi (WF-03).
+  static const int version = 2;
 
   /// Nama berkas database terenkripsi.
   static const String fileName = 'storyloka.db';
@@ -145,6 +149,7 @@ abstract final class AppDatabase {
                             CHECK (theme_mode IN ('auto','light','dark')),
         monthly_target    INTEGER NOT NULL DEFAULT 5,
         last_sync         INTEGER,
+        updated_at        INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
@@ -193,6 +198,11 @@ abstract final class AppDatabase {
     int oldVersion,
     int newVersion,
   ) async {
-    // Belum ada migrasi di luar versi 1.
+    if (oldVersion < 2) {
+      // WF-03: kolom waktu perubahan pengaturan untuk aturan LWW.
+      await db.execute(
+        'ALTER TABLE settings ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0',
+      );
+    }
   }
 }
