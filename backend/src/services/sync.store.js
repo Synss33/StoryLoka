@@ -106,7 +106,12 @@ export function applyChanges(userId, payload) {
     }
   }
   for (const row of payload.feedback ?? []) {
-    if (row && row.id != null) upsertLww(store.feedback, row, String(row.id));
+    // Kesan & saran = satu baris per pengguna (SCR-10) — key = user_id.
+    if (row && row.user_id != null) {
+      upsertLww(store.feedback, row, String(row.user_id));
+    } else if (row && row.id != null) {
+      upsertLww(store.feedback, row, String(row.id));
+    }
   }
   if (payload.settings && payload.settings.user_id != null) {
     if (!store.settings) {
@@ -134,4 +139,27 @@ export function snapshot(userId) {
     feedback: Object.values(store.feedback),
     settings: store.settings,
   };
+}
+
+/**
+ * Simpan kesan/saran dari SCR-10 (POST /feedback) — aturan LWW per
+ * pengguna (deskripsi Bagian 5.13).
+ */
+export function saveFeedback(userId, row) {
+  const data = loadAll();
+  const store = ensureUser(data, userId);
+  upsertLww(store.feedback, { ...row, user_id: userId }, String(userId));
+  saveAll(data);
+}
+
+/** Baris kesan/saran milik pengguna (null bila belum pernah diisi). */
+export function readFeedback(userId) {
+  const store = ensureUser(loadAll(), userId);
+  const rows = Object.values(store.feedback);
+  if (rows.length === 0) return null;
+  return rows.reduce((latest, row) =>
+    Number(row.updated_at ?? 0) >= Number(latest.updated_at ?? 0)
+      ? row
+      : latest,
+  );
 }
