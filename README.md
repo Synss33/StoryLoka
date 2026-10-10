@@ -29,7 +29,7 @@ Pendukung: [`docs/prototipe_ui_storyloka.html`](./docs/prototipe_ui_storyloka.ht
 - **Sensor:** Accelerometer (shake) + sensor cahaya (auto-theme; fallback tema sistem di iOS)
 - **Konverter:** mata uang IDR/USD/EUR/JPY; waktu WIB/WITA/WIT/London
 
-## 🚀 Cara Menjalankan (Fondasi WF-01)
+## 🚀 Cara Menjalankan
 
 **Prasyarat:** Flutter SDK (stable), Android SDK, Node.js ≥ 20, HP Android
 faktor nyata (USB debugging) atau emulator.
@@ -39,7 +39,7 @@ faktor nyata (USB debugging) atau emulator.
 cd backend
 npm install
 npm run dev          # http://localhost:3000/health
-npm test             # test /health & 404 (node --test)
+npm test             # test health/auth/sync (node --test)
 ```
 Butuh API key Gemini (nanti untuk WF-07)? Salin `.env.example` → `.env`
 lalu isi `GEMINI_API_KEY=`. File `.env` tidak boleh dikomit.

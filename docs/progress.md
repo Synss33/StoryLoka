@@ -15,6 +15,7 @@
 |---|---|---|---|
 | WF-01 | Setup & Fondasi | ✅ **Selesai** | 1 |
 | WF-02 | Auth, Session, Biometrik, Logout | ✅ **Selesai** (sisa verifikasi HP — lihat bawah) | 2 |
+| WF-03 | Data Lokal & Online | ✅ **Selesai** | 2 |
 | WF-03 | Data Lokal & Online | ⬜ Belum | 2 |
 | WF-04 | Navigasi, Profil, Kesan | ⬜ Belum | 2 |
 | WF-05 | Library, Tracker, Pencarian, Konverter | ⬜ Belum | 2–3 |
@@ -101,14 +102,36 @@ backend/src/           routes/auth.route, controllers/auth.controller,
 test/                  password_hasher_test, session_test, auth_flow_test (TC-01..08)
 ```
 
-## ⬜ WF-03 Data Lokal & Online (F-04, F-05 · semua layar)
+## ✅ WF-03 Data Lokal & Online — SELESAI (2026-10-10)
 
-- [ ] Model Dart per tabel + repository (CRUD offline via SQLite, penanda `dirty`).
-- [ ] REST client umum (Bearer token, error handling, timeout).
-- [ ] `POST /sync` dua arah (buku, sesi, catatan, blok, setting) — konflik **last-write-wins** `updated_at`.
-- [ ] Antrian sinkron otomatis saat kembali online; tandai `synced`.
-- [ ] Backend: `POST /sync` (atau minimal tulang punggungnya).
-- [ ] Test: TC-29 (offline lalu sinkron).
+### Checklist WF-03
+- [x] Model Dart 7 tabel inti (`lib/core/models/`): Book, ReadingSession, NoteQuote, Review, Block, FeedbackItem, AppSettings (`users` sudah ada; `notifications`/`rate_cache`/`game_scores` menyusul bersama fiturnya — keputusan 19).
+- [x] Repository CRUD offline (`lib/core/db/`): `BookRepository` penuh (insert/update/softDelete/pendingSync/applyServer) + repo sesi/catatan/ulasan/blok/feedback; penanda `dirty` disetel otomatis di setiap perubahan lokal.
+- [x] REST client umum: `ApiClient.postJson` dengan Bearer token, timeout, kode status ternormalisasi (`ApiResponse`; `-1` = offline).
+- [x] `POST /sync` dua arah (workflow §3.7): kirim baris `dirty` + append-only + settings → server menerapkan **LWW `updated_at`** (tabel bervariabel waktu) & **insert-if-absent** (notes/reviews/blocks) → balasan snapshot penuh + `serverTime` → klien terapkan LWW → tandai `dirty=0`/`synced=1` → catat `settings.last_sync`.
+- [x] Antrian otomatis: `kick()` saat splash masuk Beranda; gagal/offline → backoff 5→15→60→300 dtk sampai server menerima (antrean tidak hilang).
+- [x] Backend: `POST /sync` (`sync.store.js` JSON per pengguna, `requireAuth`), terdaftar di `app.js`.
+- [x] Skema naik **v2** (`settings.updated_at`, migrasi `ALTER TABLE`).
+- [x] Test: **TC-29 lulus** (offline → antrean → online → terkirim & bersih) + 5 test CRUD buku + 5 test backend sync.
+- [x] `flutter analyze` bersih · `flutter test` **35/35** · `npm test` **14/14**.
+- [ ] Screenshot — tidak ada layar baru di WF-03 (tidak berlaku).
+
+### Catatan teknis (rincian di `docs/keputusan.md` 19–22)
+- Balasan `/sync` = snapshot penuh (idempoten, skala kecil); ID lokal dipertahankan → asumsi satu perangkat utama per pengguna.
+- Deteksi online tanpa paket tambahan: kick + backoff (keputusan 22).
+- Payload JSON server menyimpan data per pengguna di `backend/data/sync.json` (di-gitignore).
+
+### File kunci yang dibuat
+```
+lib/core/models/       book, reading_session, note_quote, review, block,
+                       feedback_item, app_settings
+lib/core/db/           book_repository + 5 repository tabel lain
+                       (settings_repository diperluas; schema v2)
+lib/core/network/      api_client (postJson), sync_service (LWW + backoff)
+backend/src/           routes/sync.route, controllers/sync.controller,
+                       services/sync.store
+test/                  book_repository_test, sync_test (TC-29)
+```
 
 ## ⬜ WF-04 Navigasi, Profil, Kesan (F-06–F-08 · SCR-09, 10, 17)
 
