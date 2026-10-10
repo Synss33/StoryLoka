@@ -85,7 +85,7 @@ docs/keputusan.md   12 keputusan teknis
 - [x] `flutter analyze` bersih · `flutter test` 26/26 · `npm test` 9/9.
 - [ ] Verifikasi perangkat: TC-06/07 dengan biometrik nyata + **screenshot Light & Dark SCR-01** — butuh HP fisik (dikerjakan bersama sisa screenshot WF-01).
 
-### Catatan teknis (rincian di `docs/keputusan.md` 13–17)
+### Catatan teknis (rincian di `docs/keputusan.md` 13–18; no. 18: proyek $0 / Gemini tier gratis)
 - PBKDF2 (bukan Argon2id) agar bisa diuji di host; iterasi diturunkan sementara di unit test hash.
 - Test widget wajib memakai `databaseFactoryFfiNoIsolate` — operasi ffi isolate tidak pernah selesai di zona fake-async `testWidgets`.
 - Seed data test dilakukan via `tester.runAsync(...)` sebelum pump pertama (menghindari deadlock zona).
