@@ -39,14 +39,15 @@ final photoPickerProvider = Provider<PhotoPicker>((ref) => ImagePhotoPicker());
 /// Menyalin foto terpilih ke direktori dokumen aplikasi agar path
 /// tetap stabil (file sementara milik picker bisa dibersihkan sistem).
 class ProfilePhotoStore {
-  ProfilePhotoStore({this._directory});
+  ProfilePhotoStore({this.directory});
 
-  final Directory? _directory;
+  /// Direktori tujuan; `null` = direktori dokumen aplikasi (produksi).
+  final Directory? directory;
 
   /// [sourcePath] berkas hasil pilih → disimpan sebagai
   /// `profile_photo.<ekstensi>` dan path-nya dikembalikan.
   Future<String> save(String sourcePath) async {
-    final dir = _directory ?? await getApplicationDocumentsDirectory();
+    final dir = directory ?? await getApplicationDocumentsDirectory();
     var ext = p.extension(sourcePath);
     if (ext.isEmpty) ext = '.jpg';
     final destination = p.join(dir.path, 'profile_photo$ext');

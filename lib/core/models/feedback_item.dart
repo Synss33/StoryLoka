@@ -28,6 +28,15 @@ class FeedbackItem {
         synced: row['synced'] == 1,
       );
 
+  /// Dari balasan `GET /feedback` server (`user_id` dipakai; `id` lokal
+  /// dibiarkan null dan dibuat oleh tabel saat diterapkan).
+  static FeedbackItem fromJson(Map<String, dynamic> json) => FeedbackItem(
+        userId: (json['user_id'] as num?)?.toInt() ?? 0,
+        kesan: json['kesan'] as String?,
+        saran: json['saran'] as String?,
+        updatedAt: (json['updated_at'] as num?)?.toInt() ?? 0,
+      );
+
   Map<String, Object?> toJson() => <String, Object?>{
         'id': id,
         'user_id': userId,

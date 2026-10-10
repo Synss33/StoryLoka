@@ -47,7 +47,34 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     }
     try {
       final repo = await ref.read(feedbackRepositoryProvider.future);
-      final existing = await repo?.read(userId);
+      var existing = await repo?.read(userId);
+
+      // Data lokal masih kosong (perangkat baru) → tarik isi terakhir
+      // dari web service (GET /feedback) — F-08 online.
+      if (existing == null) {
+        final token =
+            (await ref.read(sessionServiceProvider).rawSession())?.token;
+        final response =
+            await ref.read(apiClientProvider).tryGetJson('/feedback',
+                token: token);
+        final remote = response.body?['feedback'];
+        if (remote is Map<String, dynamic>) {
+          final kesan = remote['kesan'] as String?;
+          final saran = remote['saran'] as String?;
+          if (kesan != null || saran != null) {
+            await repo?.applyServer(
+              FeedbackItem(
+                userId: userId,
+                kesan: kesan,
+                saran: saran,
+                updatedAt: (remote['updated_at'] as num?)?.toInt() ?? 0,
+              ),
+            );
+            existing = await repo?.read(userId);
+          }
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         _kesanController.text = existing?.kesan ?? '';

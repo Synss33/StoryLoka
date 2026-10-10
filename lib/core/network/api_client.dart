@@ -125,6 +125,36 @@ class ApiClient {
     }
   }
 
+  /// `GET` JSON dan **mengembalikan hasilnya** — dipakai SCR-10 menarik
+  /// kesan/saran terakhir bila data lokal masih kosong (WF-04).
+  Future<ApiResponse> tryGetJson(String path, {String? token}) async {
+    try {
+      final response = await _client
+          .get(
+            Uri.parse('$baseUrl$path'),
+            headers: <String, String>{
+              if (token != null) 'authorization': 'Bearer $token',
+            },
+          )
+          .timeout(_timeout);
+      try {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        return ApiResponse(
+          status: response.statusCode,
+          body: decoded is Map<String, dynamic> ? decoded : null,
+        );
+      } catch (_) {
+        return ApiResponse(
+          status: response.statusCode,
+          body: null,
+          invalidJson: true,
+        );
+      }
+    } catch (_) {
+      return const ApiResponse(status: -1);
+    }
+  }
+
   void close() => _client.close();
 }
 
