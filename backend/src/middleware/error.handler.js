@@ -14,8 +14,9 @@ export function notFoundHandler(req, res) {
  */
 export function errorHandler(err, req, res, _next) {
   const status = Number(err.status ?? err.statusCode) || 500;
-  // Log penuh hanya untuk pengembangan (tidak mencetak data sensitif).
-  if (process.env.NODE_ENV !== 'production') {
+  // Log stack hanya untuk galat server (5xx) saat pengembangan —
+  // galat 4xx (duplikat email, input salah) adalah kondisi wajar.
+  if (status >= 500 && process.env.NODE_ENV !== 'production') {
     console.error(`[error] ${req.method} ${req.originalUrl}:`, err);
   }
   res.status(status).json({

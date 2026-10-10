@@ -152,7 +152,12 @@ class AuthController extends Notifier<AuthState> {
     if (state.busy) return;
     state = state.copyWith(busy: true);
     try {
+      final session = await ref.read(sessionServiceProvider).rawSession();
       await ref.read(sessionServiceProvider).end();
+      // Cabut sesi di server juga (bila online) — tidak mengubah hasil lokal.
+      if (session != null) {
+        unawaitedServer(path: '/auth/logout', token: session.token);
+      }
     } finally {
       state = const AuthState();
     }
@@ -219,7 +224,7 @@ class AuthController extends Notifier<AuthState> {
   /// Panggilan server tanpa mengubah alur lokal (offline tetap berhasil).
   void unawaitedServer({
     required String path,
-    required Map<String, Object?> body,
+    Map<String, Object?> body = const <String, Object?>{},
     String? token,
   }) {
     ref.read(apiClientProvider).tryPostJson(path, body: body, token: token);
