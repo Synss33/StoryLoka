@@ -90,7 +90,61 @@ class ApiClient {
     }
   }
 
+  /// `POST` JSON dan **mengembalikan hasilnya** — dipakai sinkronisasi
+  /// (WF-03) yang perlu tahu isi balasan server.
+  ///
+  /// [status] `-1` = gagal jaringan/timeout (dianggap offline);
+  /// `0` = balasan bukan JSON.
+  Future<ApiResponse> postJson(
+    String path, {
+    required Map<String, Object?> body,
+    String? token,
+  }) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl$path'),
+            headers: <String, String>{
+              'content-type': 'application/json',
+              if (token != null) 'authorization': 'Bearer $token',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
+      try {
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        return ApiResponse(
+          status: response.statusCode,
+          body: decoded is Map<String, dynamic> ? decoded : null,
+        );
+      } catch (_) {
+        return ApiResponse(status: response.statusCode, body: null, invalidJson: true);
+      }
+    } catch (_) {
+      return const ApiResponse(status: -1);
+    }
+  }
+
   void close() => _client.close();
+}
+
+/// Balasan `postJson` yang sudah dinormalisasi.
+class ApiResponse {
+  const ApiResponse({required this.status, this.body, this.invalidJson = false});
+
+  /// Kode HTTP; `-1` bila jaringan gagal, `0` bila bukan JSON.
+  final int status;
+
+  /// Body JSON berbentuk objek (null bila tidak ada / bukan objek).
+  final Map<String, dynamic>? body;
+
+  /// true bila server membalas bukan JSON.
+  final bool invalidJson;
+
+  bool get ok => status >= 200 && status < 300;
+
+  /// Kondisi "server tidak terjangkau" (offline / timeout).
+  bool get offline => status == -1;
 }
 
 final apiClientProvider = Provider<ApiClient>((ref) {

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/db/database_provider.dart';
+import '../../core/network/sync_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
@@ -91,6 +92,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void _go(String location, {Object? extra}) {
     if (!mounted) return;
     context.go(location, extra: extra);
+    // Masuk Beranda dengan sesi valid → proses antrean sinkronisasi (WF-03).
+    // Bila offline, SyncService menjadwalkan coba ulang dengan backoff.
+    if (location == '/') _kickSync();
+  }
+
+  /// Memulai sinkronisasi tanpa menunggu (kegagalan tidak mengganggu UI).
+  void _kickSync() {
+    ref
+        .read(syncServiceProvider.future)
+        .then((service) => service?.kick())
+        .catchError((Object e) => debugPrint('[sync] gagal memulai: $e'));
   }
 
   @override
