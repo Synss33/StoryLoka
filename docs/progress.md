@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-10 · **Branch aktif:** `feature/wf-02-auth` (siap merge ke `develop`)
+**Terakhir diperbarui:** 2026-10-10 · **Branch aktif:** `develop` @ `e6b6fcb` (WF-02 sudah di-merge)
 
 ## Status Ringkas
 
