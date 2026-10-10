@@ -67,5 +67,6 @@ docs/
   workflow_proyek.md          <- alur kerja & pengujian
   prototipe_ui_storyloka.html <- prototipe visual
   keputusan.md                <- catatan keputusan teknis
+  progress.md                 <- checklist kemajuan WF-01…WF-11 (diperbarui tiap sesi)
 backend/                      <- REST API (Node.js/Express), lihat keputusan.md
 ```
