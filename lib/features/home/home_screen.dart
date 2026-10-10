@@ -42,7 +42,7 @@ class _ConnectionStatus extends StatelessWidget {
   const _ConnectionStatus({required this.health, required this.database});
 
   final AsyncValue<HealthStatus> health;
-  final Object? database;
+  final AsyncValue<Object?> database;
 
   @override
   Widget build(BuildContext context) {
@@ -52,9 +52,13 @@ class _ConnectionStatus extends StatelessWidget {
       error: (_, _) => '✗ Gagal memeriksa backend',
       loading: () => '• Memeriksa backend…',
     );
-    final dbText = database == null
-        ? '✗ Database terenkripsi belum terbuka'
-        : '✓ Database terenkripsi terbuka';
+    final dbText = database.when(
+      data: (db) => db == null
+          ? '✗ Database terenkripsi belum terbuka'
+          : '✓ Database terenkripsi terbuka',
+      error: (_, _) => '✗ Database gagal dibuka',
+      loading: () => '• Membuka database…',
+    );
     final caption = AppTypography.body2.copyWith(color: p.neutral500);
 
     return Column(

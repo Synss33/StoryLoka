@@ -1,34 +1,90 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/db/database_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
+import 'auth_controller.dart';
+import 'session_service.dart';
 
-/// SCR-01 — Splash, Register, Login & Biometrik.
+/// SCR-01 — Splash (F-01–F-03).
 ///
-/// WF-01: splash 1,5 detik (logo + tagline) lalu diteruskan ke Beranda.
-/// Form login/register, validasi, sesi, dan biometrik → modul WF-02.
-class SplashScreen extends StatefulWidget {
+/// Tampil 1,5 detik (logo + tagline) sambil memeriksa sesi, lalu rute
+/// sesuai alur sistem workflow Bagian 3.1:
+/// * tidak ada sesi        → `/auth` (form login/register)
+/// * sesi kedaluwarsa      → `/auth` + dialog "Sesi berakhir" (TC-05)
+/// * sesi valid + biometrik→ verifikasi (maks. 3× gagal → form password, TC-07)
+/// * sesi valid            → `/` (Beranda, auto-login TC-06)
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   Timer? _timer;
+  bool _resolving = false;
 
   @override
   void initState() {
     super.initState();
     // Splash 1,5 detik (dokumen desain Bagian 6, SCR-01).
-    // Pengecekan sesi/biometrik ditambahkan di WF-02.
-    _timer = Timer(const Duration(milliseconds: 1500), () {
-      if (mounted) context.go('/');
-    });
+    _timer = Timer(const Duration(milliseconds: 1500), _resolve);
+  }
+
+  Future<void> _resolve() async {
+    if (_resolving || !mounted) return;
+    _resolving = true;
+
+    final sessions = ref.read(sessionServiceProvider);
+    final auth = ref.read(authControllerProvider.notifier);
+
+    // Urutan sesuai alur workflow Bagian 3.1: cek sesi dulu (tanpa DB),
+    // database hanya dibuka bila sesi valid (biometrik & pengaturan).
+    final raw = await sessions.rawSession();
+    if (raw == null) {
+      // Pasca-logout: pastikan koneksi DB ditutup sebelum ke login.
+      ref.invalidate(databaseProvider);
+      _go('/auth');
+      return;
+    }
+
+    if (raw.isExpired()) {
+      // Sesi kedaluwarsa → hapus lalu ke login dengan pemberitahuan (TC-05).
+      await sessions.end();
+      ref.invalidate(databaseProvider);
+      _go('/auth', extra: 'expired');
+      return;
+    }
+
+    // Database dibutuhkan untuk pengaturan biometrik dan data pengguna.
+    await ref.read(databaseProvider.future);
+    auth.adoptSession(raw.userId);
+    if (await auth.shouldUseBiometric(raw.userId)) {
+      // Verifikasi biometrik: gagal 3× berturut-turut → form password (TC-07).
+      for (var attempt = 0; attempt < 3; attempt++) {
+        if (await auth.promptBiometric()) {
+          auth.resetBiometricFailures();
+          _go('/');
+          return;
+        }
+        auth.noteBiometricFailure();
+      }
+      _go('/auth', extra: 'biometric');
+      return;
+    }
+
+    _go('/');
+  }
+
+  void _go(String location, {Object? extra}) {
+    if (!mounted) return;
+    context.go(location, extra: extra);
   }
 
   @override

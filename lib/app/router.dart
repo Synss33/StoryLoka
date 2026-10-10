@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/ai/ai_assistant_screen.dart';
+import '../features/auth/auth_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/book_detail/book_detail_screen.dart';
 import '../features/explore/explore_screen.dart';
@@ -34,6 +35,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/splash',
       builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/auth',
+      // extra = 'expired' | 'biometric' | null (dikirim splash).
+      builder: (context, state) =>
+          AuthScreen(startMessage: state.extra as String?),
     ),
 
     // Shell 5 slot: Beranda · Explore · Profil · Kesan · (Logout di dialog).

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme/app_colors.dart';
 import '../core/widgets/bottom_nav_bar.dart';
+import '../features/auth/auth_controller.dart';
 
 /// Zona 4 Master Layout: wadah 4 tab (Beranda, Explore, Profil, Kesan)
 /// + slot Logout. Bottom nav tampil untuk rute di dalam shell
@@ -33,9 +35,9 @@ class AppShell extends StatelessWidget {
 
 /// Dialog konfirmasi Logout (dokumen desain: Dialog Logout / F-09).
 ///
-/// WF-01 hanya menampilkan dialog konfirmasi. Aksi hapus token sesi,
-/// tutup database terenkripsi, dan bersihkan state memori dikerjakan
-/// pada modul WF-02.
+/// Aksi **Keluar** (WF-02): kembali ke SCR-01, hapus token sesi, tutup
+/// database terenkripsi (saat splash menemukan sesi kosong), dan bersihkan
+/// state memori. Data buku lokal tetap tersimpan (terenkripsi).
 Future<void> showLogoutConfirmationDialog(BuildContext context) {
   return showDialog<void>(
     context: context,
@@ -52,9 +54,16 @@ Future<void> showLogoutConfirmationDialog(BuildContext context) {
           TextButton(
             // Aksi berbahaya memakai warna danger-500 (Bagian 1.1).
             style: TextButton.styleFrom(foregroundColor: p.danger500),
-            onPressed: () {
-              // TODO(wf-02): hapus token sesi, tutup DB, bersihkan state.
+            onPressed: () async {
               Navigator.of(dialogContext).pop();
+              // Ambil container lebih dulu — context layar utama segera
+              // dibuang setelah berpindah rute.
+              final container =
+                  ProviderScope.containerOf(context, listen: false);
+              context.go('/splash');
+              await container
+                  .read(authControllerProvider.notifier)
+                  .logout();
             },
             child: const Text('Keluar'),
           ),

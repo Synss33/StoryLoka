@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
@@ -59,6 +61,32 @@ class ApiClient {
         ok: false,
         message: 'Backend tidak terjangkau ($baseUrl)',
       );
+    }
+  }
+
+  /// `POST` JSON **tanpa menunggu hasil** ke UI: dipakai panggilan pendukung
+  /// (registrasi/login ke server, sinkronisasi WF-03) yang sah gagal saat
+  /// offline. Mengembalikan `true` hanya bila server membalas 2xx.
+  Future<bool> tryPostJson(
+    String path, {
+    required Map<String, Object?> body,
+    String? token,
+  }) async {
+    try {
+      final response = await _client
+          .post(
+            Uri.parse('$baseUrl$path'),
+            headers: <String, String>{
+              'content-type': 'application/json',
+              if (token != null) 'authorization': 'Bearer $token',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } catch (_) {
+      // Offline / server mati: diabaikan — data lokal tetap sumber utama.
+      return false;
     }
   }
 
