@@ -106,6 +106,78 @@ class UserRepository {
     );
   }
 
+  /// Memperbarui profil (nama, email, foto) — SCR-17 (WF-04).
+  /// [photoPath] `null` = foto tidak diubah.
+  Future<void> updateProfile({
+    required int id,
+    required String name,
+    required String email,
+    String? photoPath,
+  }) async {
+    if (name.trim().isEmpty) {
+      throw const AuthException('Nama lengkap wajib diisi.');
+    }
+    if (!_isEmail(email)) {
+      throw const AuthException('Format email tidak valid.');
+    }
+    final updates = <String, Object>{
+      'name': name.trim(),
+      'email': _normalizeEmail(email),
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (photoPath != null) updates['photo_path'] = photoPath;
+    try {
+      final count = await _db.update(
+        'users',
+        updates,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (count == 0) {
+        throw const AuthException('Pengguna tidak ditemukan.');
+      }
+    } on DatabaseException catch (e) {
+      if (e.isUniqueConstraintError()) {
+        throw const AuthException('Email sudah dipakai akun lain.');
+      }
+      rethrow;
+    }
+  }
+
+  /// Ganti password dengan verifikasi password lama — SCR-17 (WF-04).
+  Future<void> updatePassword({
+    required int id,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = await byId(id);
+    if (user == null) {
+      throw const AuthException('Pengguna tidak ditemukan.');
+    }
+    if (!await verifyPassword(user, currentPassword)) {
+      throw const AuthException('Password lama salah.');
+    }
+    if (newPassword.length < 8) {
+      throw const AuthException('Password baru minimal 8 karakter.');
+    }
+    final salt = PasswordHasher.newSaltHex();
+    final hash = await PasswordHasher.hash(newPassword, salt);
+    await _db.update(
+      'users',
+      <String, Object>{
+        'password_hash': hash,
+        'salt': salt,
+        'kdf_params': PasswordHasher.kdfParamsJson(),
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static bool _isEmail(String value) =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim());
+
   static String _normalizeEmail(String email) => email.trim().toLowerCase();
 
   static UserRecord _fromRow(Map<String, Object?> row) => UserRecord(

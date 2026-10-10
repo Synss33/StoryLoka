@@ -61,6 +61,50 @@ class SettingsRepository {
     return AppSettings.fromRow(rows.first);
   }
 
+  /// Menyimpan pilihan tema (`auto`/`light`/`dark`) — SCR-09 (WF-04).
+  Future<void> setThemeMode(int userId, String mode) async {
+    await ensureRow(userId);
+    await _db.update(
+      'settings',
+      <String, Object>{
+        'theme_mode': mode,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Menyimpan pengaturan pengingat harian (ON/OFF + jam) — SCR-09.
+  /// Penjadwalan notifikasinya sendiri dikerjakan WF-06.
+  Future<void> setReminder(int userId, {required bool on, String? time}) async {
+    await ensureRow(userId);
+    await _db.update(
+      'settings',
+      <String, Object>{
+        'reminder_on': on ? 1 : 0,
+        if (time != null) 'reminder_time': time,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+
+  /// Menyimpan toggle notifikasi target & streak (skema v3) — SCR-09.
+  Future<void> setStreakNotify(int userId, bool enabled) async {
+    await ensureRow(userId);
+    await _db.update(
+      'settings',
+      <String, Object>{
+        'streak_notify': enabled ? 1 : 0,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+
   /// Menerapkan pengaturan dari server (dipanggil SyncService setelah LWW
   /// memutus server menang).
   Future<void> applyServer(AppSettings settings) async {

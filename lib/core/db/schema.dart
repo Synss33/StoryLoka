@@ -14,7 +14,9 @@ abstract final class AppDatabase {
   /// * v1 = pembuatan awal (WF-01).
   /// * v2 = `settings.updated_at` agar konflik pengaturan bisa diselesaikan
   ///   dengan *last-write-wins* sinkronisasi (WF-03).
-  static const int version = 2;
+  /// * v3 = `settings.streak_notify` (toggle notifikasi target & streak
+  ///   di SCR-09, WF-04; penjadwalannya WF-06).
+  static const int version = 3;
 
   /// Nama berkas database terenkripsi.
   static const String fileName = 'storyloka.db';
@@ -147,6 +149,7 @@ abstract final class AppDatabase {
         reminder_time     TEXT    NOT NULL DEFAULT '20:00',
         theme_mode        TEXT    NOT NULL DEFAULT 'auto'
                             CHECK (theme_mode IN ('auto','light','dark')),
+        streak_notify     INTEGER NOT NULL DEFAULT 1,
         monthly_target    INTEGER NOT NULL DEFAULT 5,
         last_sync         INTEGER,
         updated_at        INTEGER NOT NULL DEFAULT 0,
@@ -202,6 +205,12 @@ abstract final class AppDatabase {
       // WF-03: kolom waktu perubahan pengaturan untuk aturan LWW.
       await db.execute(
         'ALTER TABLE settings ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    if (oldVersion < 3) {
+      // WF-04: toggle notifikasi target & streak di SCR-09.
+      await db.execute(
+        'ALTER TABLE settings ADD COLUMN streak_notify INTEGER NOT NULL DEFAULT 1',
       );
     }
   }

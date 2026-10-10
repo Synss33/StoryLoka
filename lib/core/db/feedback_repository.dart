@@ -23,9 +23,18 @@ class FeedbackRepository {
   ];
 
   /// Menyimpan kesan/saran pengguna (upsert per pengguna + tandai belum
-  /// tersinkron).
+  /// tersinkron). Satu baris per pengguna agar isian terakhir menimpa
+  /// yang lama (SCR-10).
   Future<void> save(FeedbackItem feedback) async {
+    final existing = await _db.query(
+      'feedback',
+      columns: ['id'],
+      where: 'user_id = ?',
+      whereArgs: [feedback.userId],
+      limit: 1,
+    );
     final row = feedback.toRow();
+    if (existing.isNotEmpty) row['id'] = existing.first['id'];
     row['synced'] = 0;
     row['updated_at'] = DateTime.now().millisecondsSinceEpoch;
     await _db.insert(
@@ -41,6 +50,7 @@ class FeedbackRepository {
       columns: _columns,
       where: 'user_id = ?',
       whereArgs: [userId],
+      orderBy: 'updated_at DESC',
       limit: 1,
     );
     if (rows.isEmpty) return null;

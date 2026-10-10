@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/theme_mode_provider.dart';
 import '../../core/db/database_provider.dart';
 import '../../core/network/sync_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -69,6 +70,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     try {
       await ref.read(databaseProvider.future);
       auth.adoptSession(raw.userId);
+      // Muat pengaturan tampilan (tema tersimpan) — SCR-09 (WF-04).
+      await ref.read(themeModeProvider.notifier).load(raw.userId);
       if (await auth.shouldUseBiometric(raw.userId)) {
         // Verifikasi biometrik: gagal 3× berturut-turut → form password (TC-07).
         for (var attempt = 0; attempt < 3; attempt++) {
