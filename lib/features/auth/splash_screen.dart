@@ -63,23 +63,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     // Database dibutuhkan untuk pengaturan biometrik dan data pengguna.
-    await ref.read(databaseProvider.future);
-    auth.adoptSession(raw.userId);
-    if (await auth.shouldUseBiometric(raw.userId)) {
-      // Verifikasi biometrik: gagal 3× berturut-turut → form password (TC-07).
-      for (var attempt = 0; attempt < 3; attempt++) {
-        if (await auth.promptBiometric()) {
-          auth.resetBiometricFailures();
-          _go('/');
-          return;
+    // Segala kegagalan di sini tidak boleh menggantung splash — sesi valid
+    // tetap diteruskan ke Beranda.
+    try {
+      await ref.read(databaseProvider.future);
+      auth.adoptSession(raw.userId);
+      if (await auth.shouldUseBiometric(raw.userId)) {
+        // Verifikasi biometrik: gagal 3× berturut-turut → form password (TC-07).
+        for (var attempt = 0; attempt < 3; attempt++) {
+          if (await auth.promptBiometric()) {
+            auth.resetBiometricFailures();
+            _go('/');
+            return;
+          }
+          auth.noteBiometricFailure();
         }
-        auth.noteBiometricFailure();
+        _go('/auth', extra: 'biometric');
+        return;
       }
-      _go('/auth', extra: 'biometric');
-      return;
+      _go('/');
+    } catch (e) {
+      debugPrint('[splash] gagal memeriksa biometrik: $e');
+      _go('/');
     }
-
-    _go('/');
   }
 
   void _go(String location, {Object? extra}) {
