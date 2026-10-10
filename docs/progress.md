@@ -7,14 +7,14 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-10 · **Branch aktif:** `develop` @ `ea03057`
+**Terakhir diperbarui:** 2026-10-10 · **Branch aktif:** `feature/wf-02-auth` (siap merge ke `develop`)
 
 ## Status Ringkas
 
 | Modul | Judul | Status | Target minggu |
 |---|---|---|---|
 | WF-01 | Setup & Fondasi | ✅ **Selesai** | 1 |
-| WF-02 | Auth, Session, Biometrik, Logout | ⬜ Belum | 2 |
+| WF-02 | Auth, Session, Biometrik, Logout | ✅ **Selesai** (sisa verifikasi HP — lihat bawah) | 2 |
 | WF-03 | Data Lokal & Online | ⬜ Belum | 2 |
 | WF-04 | Navigasi, Profil, Kesan | ⬜ Belum | 2 |
 | WF-05 | Library, Tracker, Pencarian, Konverter | ⬜ Belum | 2–3 |
@@ -70,18 +70,36 @@ docs/keputusan.md   12 keputusan teknis
 
 ---
 
-## ⬜ WF-02 Auth, Session, Biometrik, Logout (F-01–F-03, F-09 · SCR-01 + Dialog Logout)
+## ✅ WF-02 Auth, Session, Biometrik, Logout — SELESAI (2026-10-10)
 
-- [ ] Layar Register & Login (mengikuti Master Layout; pesan error bahasa Indonesia).
-- [ ] Hash password **Argon2id/PBKDF2 + salt** (pilih paket saat mulai; jangan simpan password polos).
-- [ ] Register: validasi → simpan user lokal di tabel `users` (+ `POST /auth/register` bila online).
-- [ ] Login: cocokkan hash → buat **token + expiry** di Secure Storage → buka DB → SCR-02.
-- [ ] Login gagal: pesan umum "Email atau password salah" + hitung percobaan.
-- [ ] Splash (SCR-01): cek token → token valid? biometrik aktif? → rute sesuai alur workflow §3.1.
-- [ ] Biometrik (`local_auth`): aktif/nonaktif dari Profil; gagal 3× → form password.
-- [ ] Dialog Logout (sudah ada di WF-01): lengkapi logika hapus token, tutup DB, bersih state → SCR-01.
-- [ ] Backend: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout` (token sesi; API key tidak ada di klien).
-- [ ] Test: TC-01…TC-08.
+### Checklist WF-02
+- [x] Layar Register & Login SCR-01 mengikuti Master Layout (tab Masuk/Daftar, toggle 👁 password, indikator kekuatan password, pesan galat bahasa Indonesia).
+- [x] Hash password **PBKDF2-HMAC-SHA256 + salt acak 16 byte** (210k iterasi) — password polos tidak pernah ditulis ke mana pun (TC-04).
+- [x] Register: validasi → tabel `users` → sesi 7 hari di Secure Storage → `POST /auth/register` bila online.
+- [x] Login: verifikasi hash constant-time → token acak + expiry → SCR-02; gagal → "Email atau password salah" + hitung percobaan (TC-03).
+- [x] Splash SCR-01: alur workflow §3.1 (token → biometrik aktif? 3× gagal → form password); sesi kedaluwarsa → dialog "Sesi berakhir, silakan masuk lagi" (TC-05).
+- [x] Biometrik (`local_auth`): aktif/nonaktif dari Profil (wajib verifikasi saat menyalakan); perangkat tanpa biometrik → tombol disembunyikan.
+- [x] Dialog Logout: hapus token (+ cabut sesi di server bila online) → tutup DB → bersih state → SCR-01 (TC-08).
+- [x] Backend: `POST /auth/register`, `POST /auth/login`, `POST /auth/logout` (hash ulang `node:crypto`, Bearer token 7 hari, data di `backend/data/` yang di-gitignore).
+- [x] Test: **TC-01…TC-08 lulus** (`test/auth_flow_test.dart`, biometrik memakai fake service).
+- [x] `flutter analyze` bersih · `flutter test` 26/26 · `npm test` 9/9.
+- [ ] Verifikasi perangkat: TC-06/07 dengan biometrik nyata + **screenshot Light & Dark SCR-01** — butuh HP fisik (dikerjakan bersama sisa screenshot WF-01).
+
+### Catatan teknis (rincian di `docs/keputusan.md` 13–17)
+- PBKDF2 (bukan Argon2id) agar bisa diuji di host; iterasi diturunkan sementara di unit test hash.
+- Test widget wajib memakai `databaseFactoryFfiNoIsolate` — operasi ffi isolate tidak pernah selesai di zona fake-async `testWidgets`.
+- Seed data test dilakukan via `tester.runAsync(...)` sebelum pump pertama (menghindari deadlock zona).
+
+### File kunci yang dibuat
+```
+lib/features/auth/     auth_screen (SCR-01), splash_screen, auth_controller,
+                       auth_store, session_service, user_repository, biometric_service
+lib/core/security/     password_hasher, session
+lib/core/db/           settings_repository
+backend/src/           routes/auth.route, controllers/auth.controller,
+                       services/user.store, middleware/auth
+test/                  password_hasher_test, session_test, auth_flow_test (TC-01..08)
+```
 
 ## ⬜ WF-03 Data Lokal & Online (F-04, F-05 · semua layar)
 
