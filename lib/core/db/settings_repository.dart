@@ -79,13 +79,14 @@ class SettingsRepository {
   /// Penjadwalan notifikasinya sendiri dikerjakan WF-06.
   Future<void> setReminder(int userId, {required bool on, String? time}) async {
     await ensureRow(userId);
+    final updates = <String, Object>{
+      'reminder_on': on ? 1 : 0,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (time != null) updates['reminder_time'] = time;
     await _db.update(
       'settings',
-      <String, Object>{
-        'reminder_on': on ? 1 : 0,
-        if (time != null) 'reminder_time': time,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      updates,
       where: 'user_id = ?',
       whereArgs: [userId],
     );

@@ -39,7 +39,7 @@ final photoPickerProvider = Provider<PhotoPicker>((ref) => ImagePhotoPicker());
 /// Menyalin foto terpilih ke direktori dokumen aplikasi agar path
 /// tetap stabil (file sementara milik picker bisa dibersihkan sistem).
 class ProfilePhotoStore {
-  ProfilePhotoStore({Directory? directory}) : _directory = directory;
+  ProfilePhotoStore({this._directory});
 
   final Directory? _directory;
 

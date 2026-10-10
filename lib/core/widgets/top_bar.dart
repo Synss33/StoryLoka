@@ -10,6 +10,7 @@ class StorylokaTopBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.actions = const <Widget>[],
     this.showBack = false,
+    this.leading,
   });
 
   final String title;
@@ -20,6 +21,10 @@ class StorylokaTopBar extends StatelessWidget implements PreferredSizeWidget {
   /// Menampilkan tombol `←` untuk layar fokus (Bagian 3.3).
   final bool showBack;
 
+  /// Konten awal tambahan (mis. avatar profil di Beranda — SCR-02);
+  /// mengabaikan `automaticallyImplyLeading`.
+  final Widget? leading;
+
   @override
   Size get preferredSize => const Size.fromHeight(AppLayout.topBarHeight);
 
@@ -28,6 +33,7 @@ class StorylokaTopBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(title),
       automaticallyImplyLeading: showBack,
+      leading: leading,
       actions: actions.length > 2 ? actions.sublist(0, 2) : actions,
     );
   }

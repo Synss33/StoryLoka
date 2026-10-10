@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/db/database_provider.dart';
 import '../../core/network/api_client.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/profile_avatar.dart';
 import '../../core/widgets/screen_placeholder.dart';
 import '../../core/widgets/top_bar.dart';
+import '../profile/profile_data.dart';
 
 /// SCR-02 — Beranda, Ringkasan & Currently Reading.
 ///
@@ -21,9 +24,14 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final health = ref.watch(healthProvider);
     final database = ref.watch(databaseProvider);
+    // Avatar di top bar SCR-02 ("Halo, [Nama]" + gambar — TC-10).
+    final user = ref.watch(profileDataProvider).value?.user;
 
     return Scaffold(
-      appBar: const StorylokaTopBar(title: 'Halo, Pembaca'),
+      appBar: StorylokaTopBar(
+        title: 'Halo, Pembaca',
+        leading: _HomeAvatar(photoPath: user?.photoPath, name: user?.name),
+      ),
       body: ScreenPlaceholder(
         title: 'Belum Ada Ringkasan Bacaan',
         description:
@@ -32,6 +40,24 @@ class HomeScreen extends ConsumerWidget {
         icon: Icons.dashboard_outlined,
         footer: _ConnectionStatus(health: health, database: database),
       ),
+    );
+  }
+}
+
+/// Avatar profil di top bar Beranda (ketuk → SCR-09 Profil).
+class _HomeAvatar extends StatelessWidget {
+  const _HomeAvatar({this.photoPath, this.name});
+
+  final String? photoPath;
+  final String? name;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Profil',
+      padding: EdgeInsets.zero,
+      onPressed: () => context.go('/profil'),
+      icon: ProfileAvatar(photoPath: photoPath, name: name, radius: 16),
     );
   }
 }

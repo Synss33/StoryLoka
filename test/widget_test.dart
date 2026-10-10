@@ -10,7 +10,15 @@ import 'package:storyloka/core/db/database_provider.dart';
 import 'package:storyloka/core/security/password_hasher.dart';
 import 'package:storyloka/core/security/session.dart';
 import 'package:storyloka/features/auth/auth_store.dart';
+import 'package:storyloka/features/auth/biometric_service.dart';
 import 'package:storyloka/features/auth/user_repository.dart';
+
+/// Biometrik palsu: channel `local_auth` tidak pernah merespons di host,
+/// maka SCR-09 memakai versi ini agar tidak menggantung (WF-04).
+class _NoBiometric extends BiometricService {
+  @override
+  Future<bool> isSupported() async => false;
+}
 
 /// Smoke test fondasi WF-01 + WF-02: splash → Beranda (sesi valid),
 /// bottom nav 5 slot, dan dialog konfirmasi Logout.
@@ -64,6 +72,7 @@ void main() {
         overrides: [
           authStoreProvider.overrideWithValue(store),
           databaseProvider.overrideWith((ref) async => db),
+          biometricServiceProvider.overrideWithValue(_NoBiometric()),
         ],
         child: const StorylokaApp(),
       ),
@@ -120,11 +129,11 @@ void main() {
 
     await tester.tap(find.text('Profil'));
     await tester.pumpAndSettle();
-    expect(find.text('Profil Pengguna'), findsOneWidget);
+    expect(find.text('Keamanan & Sesi'), findsOneWidget);
 
     await tester.tap(find.text('Kesan'));
     await tester.pumpAndSettle();
-    expect(find.text('Kesan & Saran Mata Kuliah PAM'), findsOneWidget);
+    expect(find.text('SIMPAN / KIRIM'), findsOneWidget);
   });
 
   testWidgets('layar fokus menyembunyikan bottom nav (Bagian 3.3)',
