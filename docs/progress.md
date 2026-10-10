@@ -16,7 +16,6 @@
 | WF-01 | Setup & Fondasi | ✅ **Selesai** | 1 |
 | WF-02 | Auth, Session, Biometrik, Logout | ✅ **Selesai** (sisa verifikasi HP — lihat bawah) | 2 |
 | WF-03 | Data Lokal & Online | ✅ **Selesai** | 2 |
-| WF-03 | Data Lokal & Online | ⬜ Belum | 2 |
 | WF-04 | Navigasi, Profil, Kesan | ⬜ Belum | 2 |
 | WF-05 | Library, Tracker, Pencarian, Konverter | ⬜ Belum | 2–3 |
 | WF-06 | Sensor, LBS, Notifikasi | ⬜ Belum | 3 |
