@@ -1,0 +1,62 @@
+# --- Flutter / Dart ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# --- Android ---
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.jks
+*.keystore
+
+# --- iOS / Xcode ---
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/ephemeral/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+xcuserdata/
+
+# --- Node.js / backend ---
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.npm/
+coverage/
+
+# --- Environment & rahasia (TIDAK boleh masuk repo) ---
+.env
+.env.*
+!.env.example
+
+# --- Data lokal aplikasi / artefak ---
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# --- Dokumen kerja / OS ---
+.DS_Store
+Thumbs.db
+*.tmp
