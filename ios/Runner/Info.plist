@@ -26,6 +26,15 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Teks izin (Bahasa Indonesia) sesuai docs/workflow_proyek.md Bagian 4.4 -->
+	<key>NSCameraUsageDescription</key>
+	<string>Kamera digunakan untuk mengambil foto profil dan sampul buku.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID dipakai untuk membuka Storyloka dengan cepat dan aman.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Lokasi digunakan untuk fitur peta perpustakaan (SCR-04).</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Galeri digunakan untuk memilih foto profil dan sampul buku.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

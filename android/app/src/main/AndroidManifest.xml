@@ -1,8 +1,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Izin sesuai docs/workflow_proyek.md Bagian 4.4.
+         Runtime permission untuk lokasi/kamera/notifikasi dipinta saat
+         fitur terkait dipakai (WF-06, dst.), bukan saat aplikasi dibuka. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Android 13+ memakai READ_MEDIA_*; penyimpanan lama dibatasi maxSdk 32. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+
     <application
-        android:label="storyloka"
+        android:label="Storyloka"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
+        <!-- usesCleartextTraffic=true hanya untuk pengembangan: backend lokal
+             diakses via http://<ip-komputer>:3000. Sebelum rilis, hapus opsi
+             ini dan pakai HTTPS (lihat Bagian 4.3 ketentuan keamanan). -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
