@@ -16,7 +16,7 @@
 | WF-01 | Setup & Fondasi | ✅ **Selesai** | 1 |
 | WF-02 | Auth, Session, Biometrik, Logout | ✅ **Selesai** (sisa verifikasi HP — lihat bawah) | 2 |
 | WF-03 | Data Lokal & Online | ✅ **Selesai** | 2 |
-| WF-04 | Navigasi, Profil, Kesan | ⬜ Belum | 2 |
+| WF-04 | Navigasi, Profil, Kesan | ✅ **Selesai** (sisa screenshot HP) | 2 |
 | WF-05 | Library, Tracker, Pencarian, Konverter | ⬜ Belum | 2–3 |
 | WF-06 | Sensor, LBS, Notifikasi | ⬜ Belum | 3 |
 | WF-07 | AI / LLM (via backend) | ⬜ Belum | 4 |
@@ -132,15 +132,36 @@ backend/src/           routes/sync.route, controllers/sync.controller,
 test/                  book_repository_test, sync_test (TC-29)
 ```
 
-## ⬜ WF-04 Navigasi, Profil, Kesan (F-06–F-08 · SCR-09, 10, 17)
+## ✅ WF-04 Navigasi, Profil, Kesan — SELESAI (2026-10-10)
 
-- [ ] SCR-09 Profil: data pengguna, statistik ringkas, pengaturan tema (auto/terang/gelap) + persistensi ke tabel `settings`.
-- [ ] SCR-17 Edit Profil: ubah nama/email/foto (kamera/galeri) → simpan.
-- [ ] Foto profil: simpan lokal (path), tampil di Profil & Beranda.
-- [ ] SCR-10 Kesan & Saran: form untuk **mata kuliah Pemrograman Aplikasi Mobile** (bukan penilaian aplikasi) → simpan lokal + `POST /feedback`.
-- [ ] Backend: `POST /feedback`, `GET /feedback`.
-- [ ] Screenshot Light & Dark SCR-09, 10, 17 (+ rekap screenshot WF-01).
-- [ ] Test: TC-09, TC-10, TC-11.
+### Checklist WF-04
+- [x] SCR-09 Profil: header berfoto (avatar → SCR-17), statistik ringkas (buku/jam/sertifikat/koin dari tabel lokal), keamanan & sesi (biometrik ON/OFF dengan verifikasi, enkripsi AES-256 aktif, "Sesi berlaku hingga"), notifikasi (pengingat harian + jam, target & streak), tema **Otomatis/Terang/Gelap** (segmented + persistensi `settings`, dimuat saat splash), "Sinkronkan Sekarang" + "Terakhir: …". Tidak ada tombol logout di sini.
+- [x] SCR-17 Edit Profil: ganti foto (kamera/galeri via `image_picker`, disalin ke direktori dokumen), ubah nama/email, ganti password (verifikasi lama, hash baru) → Simpan.
+- [x] Foto profil tampil di Profil **& Beranda** (avatar di top bar SCR-02, ketuk → Profil).
+- [x] SCR-10 Kesan & Saran **untuk mata kuliah Pemrograman Aplikasi Mobile** (bukan penilaian aplikasi): dua kolom, validasi minimal satu terisi, isian terakhir tampil ulang & dapat diedit; simpan lokal (`synced=0`) + `POST /feedback` → tandai tersinkron; bila lokal kosong → `GET /feedback`.
+- [x] Backend: `POST /feedback`, `GET /feedback` (`requireAuth`, LWW per pengguna di `sync.store`; feedback payload `/sync` kini juga key per pengguna).
+- [x] Skema **v3** (`settings.streak_notify`, migrasi `ALTER TABLE`); model data di `deskripsi_proyek.md` ikut diperbarui.
+- [x] Test: **TC-09, TC-10, TC-11 lulus** — `test/profile_test.dart` (5), `test/edit_profile_test.dart` (2), `test/feedback_flow_test.dart` (2); TC-09 memakai widget test 5 slot + dialog logout yang sudah ada.
+- [x] `flutter analyze` bersih · `flutter test` **44/44** · `npm test` **19/19**.
+- [ ] Screenshot Light & Dark SCR-09, 10, 17 (+ rekap screenshot WF-01/WF-02) — butuh HP fisik.
+
+### Catatan teknis (rincian di `docs/keputusan.md` 23–27)
+- `PhotoPicker`/`ProfilePhotoStore` abstraksi → test TC-10 tanpa kamera/IO nyata; file uji PNG 1×1 dibuat di `setUp` (zona nyata) — IO async di dalam `testWidgets` menggantung di zona fake-async.
+- Channel `local_auth` tidak pernah merespons di host → widget test menyuntikkan `BiometricService` palsu agar SCR-09 tidak menggantung.
+- Tombol "SIMPAN / KIRIM" berada di bawah lipatan layar test → test memakai `ensureVisible` sebelum tap.
+
+### File kunci yang dibuat
+```
+lib/features/profile/  profile_screen (SCR-09), edit_profile_screen (SCR-17),
+                       profile_data, profile_stats, photo_service
+lib/features/feedback/ feedback_screen (SCR-10)
+lib/core/widgets/      profile_avatar (dipakai SCR-09 & top bar SCR-02)
+lib/core/db/           schema v3 + settings_repository (tema/pengingat/streak)
+                       feedback_repository (upsert per pengguna)
+lib/core/network/      api_client.tryGetJson
+backend/src/           routes/feedback.route, controllers/feedback.controller
+test/                  profile_test, edit_profile_test (TC-10), feedback_flow_test (TC-11)
+```
 
 ## ⬜ WF-05 Library, Tracker, Pencarian, Konverter (F-10, F-17–F-19 · SCR-02, 03, 06, 07, 08, 15, 04)
 
