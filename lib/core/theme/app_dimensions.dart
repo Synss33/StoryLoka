@@ -36,10 +36,14 @@ abstract final class AppRadius {
   /// Pill/badge penuh.
   static const double pill = 999;
 
-  static final BorderRadius smallAll = BorderRadius.circular(small);
-  static final BorderRadius mediumAll = BorderRadius.circular(medium);
-  static final BorderRadius largeAll = BorderRadius.circular(large);
-  static final BorderRadius pillAll = BorderRadius.circular(pill);
+  static const BorderRadius smallAll =
+      BorderRadius.all(Radius.elliptical(small, small));
+  static const BorderRadius mediumAll =
+      BorderRadius.all(Radius.elliptical(medium, medium));
+  static const BorderRadius largeAll =
+      BorderRadius.all(Radius.elliptical(large, large));
+  static const BorderRadius pillAll =
+      BorderRadius.all(Radius.elliptical(pill, pill));
 }
 
 /// Ukuran tinggi/lebar komponen tetap (Master Layout & Bagian 1.3/1.4).

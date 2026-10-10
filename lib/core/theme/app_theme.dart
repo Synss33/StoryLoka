@@ -76,8 +76,8 @@ abstract final class AppTheme {
           disabledForegroundColor: p.neutral500,
           minimumSize: const Size.fromHeight(AppLayout.buttonHeight),
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.xs,
+            horizontal: AppSpacing.screenMargin,
+            vertical: AppSpacing.grid,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: AppRadius.mediumAll,
@@ -92,8 +92,8 @@ abstract final class AppTheme {
           disabledForegroundColor: p.neutral500,
           minimumSize: const Size.fromHeight(AppLayout.buttonHeight),
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.xs,
+            horizontal: AppSpacing.screenMargin,
+            vertical: AppSpacing.grid,
           ),
           side: BorderSide(color: p.primary600, width: 1),
           shape: RoundedRectangleBorder(
@@ -117,8 +117,8 @@ abstract final class AppTheme {
         fillColor: p.neutral100,
         isDense: false,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
+          horizontal: AppSpacing.screenMargin,
+          vertical: AppSpacing.cardGap,
         ),
         hintStyle: AppTypography.body1.copyWith(color: p.neutral500),
         labelStyle: AppTypography.body1.copyWith(color: p.neutral500),
@@ -179,22 +179,16 @@ abstract final class AppTheme {
         iconColor: p.neutral500,
         textColor: p.textPrimary,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
+          horizontal: AppSpacing.screenMargin,
         ),
         minTileHeight: AppSpacing.touchTarget,
-      ),
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        },
       ),
     );
   }
 
   /// Warna teks per slot (H1…Caption) mengikuti token teks aktif.
   static TextTheme _textTheme(AppPalette p) {
-    const base = AppTypography.textTheme();
+    final base = AppTypography.textTheme();
     return base.copyWith(
       titleLarge: base.titleLarge?.copyWith(color: p.textPrimary),
       titleMedium: base.titleMedium?.copyWith(color: p.textPrimary),
