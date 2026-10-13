@@ -29,6 +29,34 @@ Pendukung: [`docs/prototipe_ui_storyloka.html`](./docs/prototipe_ui_storyloka.ht
 - **Sensor:** Accelerometer (shake) + sensor cahaya (auto-theme; fallback tema sistem di iOS)
 - **Konverter:** mata uang IDR/USD/EUR/JPY; waktu WIB/WITA/WIT/London
 
+## 🚀 Cara Menjalankan
+
+**Prasyarat:** Flutter SDK (stable), Android SDK, Node.js ≥ 20, HP Android
+faktor nyata (USB debugging) atau emulator.
+
+**1. Backend (Node.js/Express):**
+```sh
+cd backend
+npm install
+npm run dev          # http://localhost:3000/health
+npm test             # test health/auth/sync (node --test)
+```
+Butuh API key Gemini (nanti untuk WF-07)? Salin `.env.example` → `.env`
+lalu isi `GEMINI_API_KEY=`. File `.env` tidak boleh dikomit.
+
+**2. Aplikasi Flutter:**
+```sh
+flutter pub get
+flutter analyze
+flutter test
+# Emulator Android (default API_BASE_URL=http://10.0.2.2:3000):
+flutter run
+# HP fisik via USB — IP komputer yang menjalankan backend:
+flutter run --dart-define=API_BASE_URL=http://192.168.1.5:3000
+```
+Status koneksi backend tampil di SCR-02 (Beranda) — bila `Backend terjangkau`
+muncul, aplikasi sudah tersambung ke backend.
+
 ## 🗂️ Struktur Dokumen
 ```
 README.md                     <- pintu masuk (Anda di sini)
@@ -39,4 +67,6 @@ docs/
   workflow_proyek.md          <- alur kerja & pengujian
   prototipe_ui_storyloka.html <- prototipe visual
   keputusan.md                <- catatan keputusan teknis
+  progress.md                 <- checklist kemajuan WF-01…WF-11 (diperbarui tiap sesi)
+backend/                      <- REST API (Node.js/Express), lihat keputusan.md
 ```
