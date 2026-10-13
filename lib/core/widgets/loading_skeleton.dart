@@ -26,14 +26,18 @@ class LoadingSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (_preset) {
       _SkeletonPreset.summary => const _SummarySkeleton(),
-      _SkeletonPreset.list => Column(
-          children: [
-            for (var i = 0; i < count; i++) ...[
-              const _CardSkeleton(),
-              if (i != count - 1)
-                const SizedBox(height: AppSpacing.cardGap),
+      // Dibungkus scroll agar aman bila ruang tinggi terbatas
+      // (mis. area hasil pencarian di SCR-08) — tanpa overflow.
+      _SkeletonPreset.list => SingleChildScrollView(
+          child: Column(
+            children: [
+              for (var i = 0; i < count; i++) ...[
+                const _CardSkeleton(),
+                if (i != count - 1)
+                  const SizedBox(height: AppSpacing.cardGap),
+              ],
             ],
-          ],
+          ),
         ),
       _SkeletonPreset.bookGrid => Wrap(
           spacing: AppSpacing.cardGap,

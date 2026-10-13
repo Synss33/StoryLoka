@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/network/book_search_service.dart';
 import '../features/ai/ai_assistant_screen.dart';
 import '../features/auth/auth_screen.dart';
 import '../features/auth/splash_screen.dart';
@@ -102,9 +103,17 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const AiAssistantScreen(), // SCR-05
     ),
     // Rute statis `/book/edit` didahulukan agar tidak tertangkap `/book/:id`.
+    // Query `?id=` = mode edit; `extra` = hasil pencarian online (TC-13).
     GoRoute(
       path: '/book/edit',
-      builder: (context, state) => const AddBookScreen(), // SCR-07
+      builder: (context, state) {
+        final extra = state.extra;
+        final id = int.tryParse(state.uri.queryParameters['id'] ?? '');
+        if (extra is OnlineBookResult) {
+          return AddBookScreen(prefill: extra);
+        }
+        return AddBookScreen(bookId: id);
+      },
     ),
     GoRoute(
       path: '/book/:id',
@@ -116,8 +125,11 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const SearchScreen(), // SCR-08
     ),
     GoRoute(
+      // Query `?id=` = buku yang sedang dibaca (dari SCR-02 / SCR-06).
       path: '/session',
-      builder: (context, state) => const ReadingSessionScreen(), // SCR-15
+      builder: (context, state) => ReadingSessionScreen(
+        bookId: int.tryParse(state.uri.queryParameters['id'] ?? ''),
+      ), // SCR-15
     ),
     GoRoute(
       path: '/game',

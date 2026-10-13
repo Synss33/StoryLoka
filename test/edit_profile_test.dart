@@ -173,7 +173,7 @@ void main() {
     // Beranda: avatar di top bar memakai foto yang sama (TC-10).
     await tester.tap(find.text('Beranda'));
     await tester.pumpAndSettle();
-    expect(find.text('Halo, Pembaca'), findsOneWidget);
+    expect(find.text('Halo, Pengguna'), findsOneWidget);
     expect(
       avatarShowing(photoSource.path),
       isTrue,

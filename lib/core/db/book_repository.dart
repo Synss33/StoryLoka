@@ -40,10 +40,22 @@ class BookRepository {
   int _now() => DateTime.now().millisecondsSinceEpoch;
 
   /// Daftar buku milik [userId]; default tanpa yang terhapus, terbaru dulu.
+  ///
+  /// [query] menyaring judul/penulis/ISBN (pencarian lokal SCR-03/SCR-08);
+  /// [genre], [minRating], dan [year] menyaring hasil (filter SCR-08,
+  /// TC-14); [excludeWishlist] membatasi tab Koleksi (bagian 7: buku
+  /// `wishlist` hanya muncul di tab Wishlist); [orderBy] menerima
+  /// `updated_at DESC` (terbaru), `title ASC` (judul), atau
+  /// `rating DESC` (rating).
   Future<List<Book>> list(
     int userId, {
     String? status,
     bool includeDeleted = false,
+    bool excludeWishlist = false,
+    String? query,
+    String? genre,
+    double? minRating,
+    int? year,
     String orderBy = 'updated_at DESC',
   }) async {
     final where = <String>['user_id = ?'];
@@ -52,6 +64,26 @@ class BookRepository {
     if (status != null) {
       where.add('status = ?');
       args.add(status);
+    } else if (excludeWishlist) {
+      where.add('status != ?');
+      args.add('wishlist');
+    }
+    if (query != null && query.trim().isNotEmpty) {
+      final q = '%${query.trim()}%';
+      where.add('(title LIKE ? OR author LIKE ? OR isbn LIKE ?)');
+      args.addAll([q, q, q]);
+    }
+    if (genre != null && genre.isNotEmpty) {
+      where.add('genre = ?');
+      args.add(genre);
+    }
+    if (minRating != null) {
+      where.add('rating IS NOT NULL AND rating >= ?');
+      args.add(minRating);
+    }
+    if (year != null) {
+      where.add('year = ?');
+      args.add(year);
     }
     final rows = await _db.query(
       'books',
@@ -61,6 +93,35 @@ class BookRepository {
       orderBy: orderBy,
     );
     return rows.map(Book.fromRow).toList();
+  }
+
+  /// Daftar genre unik milik pengguna (untuk opsi filter SCR-08).
+  Future<List<String>> genres(int userId) async {
+    final rows = await _db.rawQuery(
+      'SELECT DISTINCT genre FROM books '
+      'WHERE user_id = ? AND deleted = 0 AND genre IS NOT NULL AND genre != \'\' '
+      'ORDER BY genre ASC',
+      <Object?>[userId],
+    );
+    return rows
+        .map((r) => r['genre'] as String?)
+        .whereType<String>()
+        .toList();
+  }
+
+  /// Daftar tahun terbit unik milik pengguna (untuk opsi filter SCR-08).
+  Future<List<int>> years(int userId) async {
+    final rows = await _db.rawQuery(
+      'SELECT DISTINCT year FROM books '
+      'WHERE user_id = ? AND deleted = 0 AND year IS NOT NULL '
+      'ORDER BY year DESC',
+      <Object?>[userId],
+    );
+    return rows
+        .map((r) => r['year'] as num?)
+        .whereType<num>()
+        .map((y) => y.toInt())
+        .toList();
   }
 
   Future<Book?> get(int id) async {

@@ -46,6 +46,28 @@ class ReadingSessionRepository {
     return rows.map(ReadingSession.fromRow).toList();
   }
 
+  /// Halaman terakhir terjauh pada sebuah buku — dasar progres % di
+  /// SCR-02/SCR-06 (buku tidak menyimpan kolom halaman terkini).
+  Future<int> furthestPage(int bookId) async {
+    final rows = await _db.rawQuery(
+      'SELECT MAX(last_page) AS p FROM reading_sessions WHERE book_id = ?',
+      <Object?>[bookId],
+    );
+    final value = rows.isEmpty ? null : rows.first['p'];
+    return value is num ? value.toInt() : 0;
+  }
+
+  /// Total durasi (detik) seluruh sesi sebuah buku — "total jam" SCR-06.
+  Future<int> totalDurationSec(int bookId) async {
+    final rows = await _db.rawQuery(
+      'SELECT COALESCE(SUM(duration_sec), 0) AS d '
+      'FROM reading_sessions WHERE book_id = ?',
+      <Object?>[bookId],
+    );
+    final value = rows.isEmpty ? null : rows.first['d'];
+    return value is num ? value.toInt() : 0;
+  }
+
   /// Menerapkan sesi dari server: LWW by `updated_at`; insert bila belum ada.
   Future<void> applyServer(ReadingSession server) async {
     if (server.id == null) return;

@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -88,7 +88,7 @@ void main() {
       (tester) async {
     await pumpApp(tester);
 
-    expect(find.text('Halo, Pembaca'), findsOneWidget);
+    expect(find.text('Halo, Pengguna'), findsOneWidget);
     for (final label in <String>[
       'Beranda',
       'Explore',
@@ -116,7 +116,7 @@ void main() {
     await tester.tap(find.text('Batal'));
     await tester.pumpAndSettle();
     expect(find.text('Keluar dari Storyloka?'), findsNothing);
-    expect(find.text('Halo, Pembaca'), findsOneWidget);
+    expect(find.text('Halo, Pengguna'), findsOneWidget);
   });
 
   testWidgets('berpindah tab Explore/Profil/Kesan menampilkan layarnya',
@@ -125,7 +125,9 @@ void main() {
 
     await tester.tap(find.text('Explore'));
     await tester.pumpAndSettle();
-    expect(find.text('Jelajahi Fitur Tambahan'), findsOneWidget);
+    // SCR-04 segmentasi: segmen Peta/Konverter/Game, default Konverter.
+    expect(find.text('Konverter'), findsOneWidget);
+    expect(find.text('Mata Uang'), findsOneWidget);
 
     await tester.tap(find.text('Profil'));
     await tester.pumpAndSettle();
@@ -144,7 +146,7 @@ void main() {
     appRouter.go('/search');
     await tester.pumpAndSettle();
 
-    expect(find.text('Pencarian'), findsOneWidget);
+    expect(find.text('Koleksi Saya'), findsOneWidget);
     expect(find.text('Beranda'), findsNothing);
     expect(find.text('Logout'), findsNothing);
   });

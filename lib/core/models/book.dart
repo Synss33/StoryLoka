@@ -113,4 +113,48 @@ class Book {
         'deleted': deleted ? 1 : 0,
         'dirty': dirty ? 1 : 0,
       };
+
+  /// Salinan dengan sebagian field diganti (dipakai layar edit & alur sesi).
+  Book copyWith({
+    int? id,
+    int? userId,
+    String? title,
+    String? author,
+    String? publisher,
+    int? year,
+    String? isbn,
+    String? genre,
+    int? pages,
+    String? cover,
+    String? synopsis,
+    String? status,
+    double? rating,
+    double? price,
+    int? startedAt,
+    int? finishedAt,
+    int? updatedAt,
+    bool? deleted,
+    bool? dirty,
+  }) =>
+      Book(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        title: title ?? this.title,
+        author: author ?? this.author,
+        publisher: publisher ?? this.publisher,
+        year: year ?? this.year,
+        isbn: isbn ?? this.isbn,
+        genre: genre ?? this.genre,
+        pages: pages ?? this.pages,
+        cover: cover ?? this.cover,
+        synopsis: synopsis ?? this.synopsis,
+        status: status ?? this.status,
+        rating: rating ?? this.rating,
+        price: price ?? this.price,
+        startedAt: startedAt ?? this.startedAt,
+        finishedAt: finishedAt ?? this.finishedAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deleted: deleted ?? this.deleted,
+        dirty: dirty ?? this.dirty,
+      );
 }

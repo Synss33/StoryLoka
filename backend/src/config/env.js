@@ -11,6 +11,13 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   // API key Gemini untuk proxy LLM (WF-07). Kosong sampai diisi di `.env`.
   geminiApiKey: process.env.GEMINI_API_KEY ?? '',
+  // Kurs (F-17, WF-05): provider publik tanpa API key, TTL cache server,
+  // dan mode luring untuk pengujian deterministik (RATES_OFFLINE=1).
+  ratesProviderUrl:
+    process.env.RATES_PROVIDER_URL ??
+    'https://open.er-api.com/v6/latest/IDR',
+  ratesTtlMs: Number(process.env.RATES_TTL_MS ?? 6 * 60 * 60 * 1000),
+  ratesOffline: process.env.RATES_OFFLINE === '1',
 };
 
 /** Nama & versi layanan untuk response `/health`. */

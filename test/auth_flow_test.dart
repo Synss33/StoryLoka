@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -138,7 +138,7 @@ void main() {
     await fillRegister(tester);
     await submit(tester);
 
-    expect(find.text('Halo, Pembaca'), findsOneWidget);
+    expect(find.text('Halo, Budi'), findsOneWidget);
     expect(store.session, isNotNull);
     expect(store.session!.userId, 1);
   });
@@ -153,7 +153,7 @@ void main() {
     expect(find.text('Password minimal 8 karakter.'), findsOneWidget);
     // Tetap di form, tidak masuk beranda.
     expect(find.byKey(const Key('field-register-name')), findsOneWidget);
-    expect(find.text('Halo, Pembaca'), findsNothing);
+    expect(find.text('Halo, Budi'), findsNothing);
   });
 
   testWidgets('TC-03: login password salah → pesan umum + hitung percobaan',
@@ -184,7 +184,7 @@ void main() {
     expect(find.text('Email atau password salah.'), findsOneWidget);
     expect(find.text('Percobaan gagal: 1'), findsOneWidget);
     expect(store.session, isNull);
-    expect(find.text('Halo, Pembaca'), findsNothing);
+    expect(find.text('Halo, Budi'), findsNothing);
   });
 
   testWidgets('TC-04: password tersimpan ter-hash (tidak ada teks polos)',
@@ -256,7 +256,7 @@ void main() {
     await pumpSplash(tester);
 
     expect(biometric.calls, greaterThanOrEqualTo(1));
-    expect(find.text('Halo, Pembaca'), findsOneWidget);
+    expect(find.text('Halo, Budi'), findsOneWidget);
   });
 
   testWidgets('TC-07: biometrik gagal 3× → form password', (tester) async {
@@ -282,7 +282,7 @@ void main() {
       find.text('Biometrik gagal 3 kali. Gunakan password.'),
       findsOneWidget,
     );
-    expect(find.text('Halo, Pembaca'), findsNothing);
+    expect(find.text('Halo, Budi'), findsNothing);
   });
 
   testWidgets('TC-08: logout → token terhapus, kembali ke SCR-01',
@@ -290,7 +290,7 @@ void main() {
     await pumpSplash(tester);
     await fillRegister(tester);
     await submit(tester);
-    expect(find.text('Halo, Pembaca'), findsOneWidget);
+    expect(find.text('Halo, Budi'), findsOneWidget);
 
     await tester.tap(find.text('Logout'));
     await tester.pumpAndSettle();
@@ -304,6 +304,6 @@ void main() {
 
     expect(store.session, isNull);
     expect(find.byKey(const Key('field-login-identifier')), findsOneWidget);
-    expect(find.text('Halo, Pembaca'), findsNothing);
+    expect(find.text('Halo, Budi'), findsNothing);
   });
 }

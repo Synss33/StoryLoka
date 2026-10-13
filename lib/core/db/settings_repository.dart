@@ -106,6 +106,22 @@ class SettingsRepository {
     );
   }
 
+  /// Menyimpan target baca bulanan (jumlah buku/bulan) — SCR-02/SCR-15
+  /// (WF-05). Nilai dibatasi 1…100 agar masuk akal.
+  Future<void> setMonthlyTarget(int userId, int target) async {
+    await ensureRow(userId);
+    final clamped = target.clamp(1, 100);
+    await _db.update(
+      'settings',
+      <String, Object>{
+        'monthly_target': clamped,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'user_id = ?',
+      whereArgs: [userId],
+    );
+  }
+
   /// Menerapkan pengaturan dari server (dipanggil SyncService setelah LWW
   /// memutus server menang).
   Future<void> applyServer(AppSettings settings) async {

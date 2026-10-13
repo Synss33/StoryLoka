@@ -5,6 +5,7 @@ import { errorHandler, notFoundHandler } from './middleware/error.handler.js';
 import authRouter from './routes/auth.route.js';
 import feedbackRouter from './routes/feedback.route.js';
 import healthRouter from './routes/health.route.js';
+import ratesRouter from './routes/rates.route.js';
 import syncRouter from './routes/sync.route.js';
 
 /**
@@ -18,8 +19,9 @@ import syncRouter from './routes/sync.route.js';
  *   POST /auth/logout      -> akhiri sesi (WF-02, butuh Bearer token)
  *   POST /sync             -> sinkronisasi dua arah (WF-03, Bearer token)
  *   POST/GET /feedback     -> kesan & saran PAM (WF-04, Bearer token)
- * Endpoint lain (/ai/*, /rates) menyusul di
- * WF-05…WF-07 sesuai `docs/deskripsi_proyek.md` Bagian 5.2.
+ *   GET  /rates            -> kurs mata uang konverter (WF-05, Bearer token)
+ * Endpoint lain (/ai/*) menyusul di WF-07 sesuai
+ * `docs/deskripsi_proyek.md` Bagian 5.2.
  */
 export function createApp() {
   const app = express();
@@ -32,6 +34,7 @@ export function createApp() {
   app.use('/auth', authRouter);
   app.use('/sync', syncRouter);
   app.use('/feedback', feedbackRouter);
+  app.use('/rates', ratesRouter);
 
   // Urutan wajib: 404 dulu, error handler di paling akhir.
   app.use(notFoundHandler);
