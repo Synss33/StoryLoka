@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme_mode_provider.dart';
 import '../../core/db/settings_repository.dart';
 import '../../core/network/sync_service.dart';
+import '../../core/notifications/notification_coordinator.dart';
+import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
@@ -108,6 +110,11 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     final settings = await ref.read(settingsRepositoryProvider.future);
     if (userId != null) {
       await settings?.setReminder(userId, on: on);
+      // Jadwalkan/batalkan pengingat sistem + izin kontekstual (F-14).
+      await ref.read(notificationCoordinatorProvider).applyReminder(userId);
+      if (on) {
+        await ref.read(notificationServiceProvider).requestPermission();
+      }
     }
     ref.invalidate(profileDataProvider);
   }
@@ -131,6 +138,8 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
       time: '${picked.hour.toString().padLeft(2, '0')}:'
           '${picked.minute.toString().padLeft(2, '0')}',
     );
+    // Terapkan jam baru ke penjadwal sistem (F-14 — workflow 3.8).
+    await ref.read(notificationCoordinatorProvider).applyReminder(userId);
     ref.invalidate(profileDataProvider);
   }
 

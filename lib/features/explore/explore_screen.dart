@@ -1,28 +1,30 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/sensors/shake_discover.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/screen_placeholder.dart';
 import '../../core/widgets/storyloka_card.dart';
 import '../../core/widgets/top_bar.dart';
 import 'converter_panel.dart';
+import 'peta_panel.dart';
 
 /// SCR-04 — Explore: Peta (LBS), Konverter & Game.
 ///
 /// WF-05 (F-17/F-18): segmen Konverter (mata uang + zona waktu, offline
 /// friendly). Segmen Peta/LBS + shake → WF-06, segmen Game → WF-09.
-class ExploreScreen extends StatefulWidget {
+class ExploreScreen extends ConsumerStatefulWidget {
   const ExploreScreen({super.key});
 
   @override
-  State<ExploreScreen> createState() => _ExploreScreenState();
+  ConsumerState<ExploreScreen> createState() => _ExploreScreenState();
 }
 
 enum _Segment { peta, konverter, game }
 
-class _ExploreScreenState extends State<ExploreScreen> {
+class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   _Segment _segment = _Segment.konverter;
   bool _currencyMode = true;
 
@@ -30,47 +32,44 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     final p = AppColors.of(context);
 
-    return Scaffold(
-      appBar: const StorylokaTopBar(title: 'Explore'),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.screenMargin),
-        children: [
-          SegmentedButton<_Segment>(
-            segments: const [
-              ButtonSegment(
-                value: _Segment.peta,
-                label: Text('Peta'),
-                icon: Icon(Icons.map_outlined, size: 18),
-              ),
-              ButtonSegment(
-                value: _Segment.konverter,
-                label: Text('Konverter'),
-                icon: Icon(Icons.currency_exchange_outlined, size: 18),
-              ),
-              ButtonSegment(
-                value: _Segment.game,
-                label: Text('Game'),
-                icon: Icon(Icons.sports_esports_outlined, size: 18),
-              ),
-            ],
-            selected: {_segment},
-            showSelectedIcon: false,
-            onSelectionChanged: (selection) =>
-                setState(() => _segment = selection.first),
-          ),
-          const SizedBox(height: AppSpacing.cardGap),
+    return ShakeDiscoverWatcher(
+      location: '/explore',
+      child: Scaffold(
+        appBar: const StorylokaTopBar(title: 'Explore'),
+        body: ListView(
+          padding: const EdgeInsets.all(AppSpacing.screenMargin),
+          children: [
+            SegmentedButton<_Segment>(
+              segments: const [
+                ButtonSegment(
+                  value: _Segment.peta,
+                  label: Text('Peta'),
+                  icon: Icon(Icons.map_outlined, size: 18),
+                ),
+                ButtonSegment(
+                  value: _Segment.konverter,
+                  label: Text('Konverter'),
+                  icon: Icon(Icons.currency_exchange_outlined, size: 18),
+                ),
+                ButtonSegment(
+                  value: _Segment.game,
+                  label: Text('Game'),
+                  icon: Icon(Icons.sports_esports_outlined, size: 18),
+                ),
+              ],
+              selected: {_segment},
+              showSelectedIcon: false,
+              onSelectionChanged: (selection) =>
+                  setState(() => _segment = selection.first),
+            ),
+            const SizedBox(height: AppSpacing.cardGap),
           switch (_segment) {
-            _Segment.peta => const ScreenPlaceholder(
-                title: 'Peta Baca (LBS)',
-                description:
-                    'Peta sebaran bacaan, book club terdekat, dan aksi '
-                    'shake (cek in lokasi) — diisi pada modul WF-06.',
-                icon: Icons.map_outlined,
-              ),
+            _Segment.peta => const PetaPanel(), // SCR-04 — LBS (WF-06)
             _Segment.konverter => _buildConverter(p),
             _Segment.game => _buildGame(p),
           },
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -97,10 +96,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.cardGap),
-        if (_currencyMode)
-          const CurrencyPanel()
-        else
-          const TimePanel(),
+        if (_currencyMode) const CurrencyPanel() else const TimePanel(),
       ],
     );
   }
@@ -163,11 +159,7 @@ class _ModeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: selected ? p.onPrimary : p.neutral500,
-            ),
+            Icon(icon, size: 16, color: selected ? p.onPrimary : p.neutral500),
             const SizedBox(width: AppSpacing.micro),
             Text(
               label,

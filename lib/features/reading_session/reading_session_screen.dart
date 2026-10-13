@@ -8,6 +8,7 @@ import '../../core/db/book_repository.dart';
 import '../../core/db/reading_session_repository.dart';
 import '../../core/models/book.dart';
 import '../../core/models/reading_session.dart';
+import '../../core/notifications/notification_coordinator.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
@@ -17,6 +18,7 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/storyloka_card.dart';
 import '../../core/widgets/top_bar.dart';
+import '../auth/auth_controller.dart';
 import '../book_detail/book_detail_data.dart';
 import '../book_detail/completion.dart';
 import '../home/home_data.dart';
@@ -190,6 +192,17 @@ class _ReadingSessionScreenState extends ConsumerState<ReadingSessionScreen> {
     ref.invalidate(homeDataProvider);
     ref.invalidate(libraryBooksProvider);
     if (book.id != null) ref.invalidate(bookDetailProvider(book.id!));
+
+    // Notifikasi event target/streak (F-14 — WF-06); kegagalan diabaikan
+    // agar penyimpanan sesi tetap sukses.
+    final userId = ref.read(authControllerProvider).userId;
+    if (userId != null) {
+      unawaited(
+        ref
+            .read(notificationCoordinatorProvider)
+            .notifySessionMilestones(userId),
+      );
+    }
 
     if (!mounted) return;
     if (reachedTotal) {

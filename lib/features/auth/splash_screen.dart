@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme_mode_provider.dart';
 import '../../core/db/database_provider.dart';
 import '../../core/network/sync_service.dart';
+import '../../core/notifications/notification_coordinator.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
@@ -97,7 +98,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     context.go(location, extra: extra);
     // Masuk Beranda dengan sesi valid → proses antrean sinkronisasi (WF-03).
     // Bila offline, SyncService menjadwalkan coba ulang dengan backoff.
-    if (location == '/') _kickSync();
+    if (location == '/') {
+      _kickSync();
+      _syncReminderHistory();
+    }
+  }
+
+  /// Rekam pengingat harian yang sudah lewat hari ini ke SCR-14
+  /// (F-14 — WF-06; kegagalan tidak mengganggu splash).
+  void _syncReminderHistory() {
+    final userId = ref.read(authControllerProvider).userId;
+    if (userId == null) return;
+    ref
+        .read(notificationCoordinatorProvider)
+        .onSessionStart(userId)
+        .catchError((Object e) => debugPrint('[notif] riwayat: $e'));
   }
 
   /// Memulai sinkronisasi tanpa menunggu (kegagalan tidak mengganggu UI).

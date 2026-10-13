@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/db/database_provider.dart';
 import '../../core/network/api_client.dart';
+import '../../core/sensors/shake_discover.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
@@ -16,6 +17,7 @@ import '../../core/widgets/storyloka_card.dart';
 import '../../core/widgets/top_bar.dart';
 import '../library/book_tile.dart';
 import '../library/library_data.dart';
+import '../notifications/notifications_data.dart';
 import '../profile/profile_data.dart';
 import 'home_data.dart';
 
@@ -34,120 +36,124 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(profileDataProvider).value?.user;
     final name = (user?.name ?? 'Pembaca').split(' ').first;
 
-    return Scaffold(
-      appBar: StorylokaTopBar(
-        title: 'Halo, $name',
-        leading: _HomeAvatar(photoPath: user?.photoPath, name: user?.name),
+    return ShakeDiscoverWatcher(
+      location: '/',
+      child: Scaffold(
+        appBar: StorylokaTopBar(
+          title: 'Halo, $name',
+          leading: _HomeAvatar(photoPath: user?.photoPath, name: user?.name),
         actions: [
           IconButton(
             key: const ValueKey<String>('goto-notifications'),
             tooltip: 'Pusat Notifikasi',
-            icon: const Icon(Icons.notifications_outlined),
+            // Titik merah bila ada notifikasi belum dibaca (Bagian 6).
+            icon: _NotificationBell(
+              unread: ref.watch(unreadCountProvider).value ?? 0,
+            ),
             onPressed: () => context.push('/notifications'),
           ),
         ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(homeDataProvider),
-        child: data.when(
-          loading: () => const SingleChildScrollView(
-            padding: EdgeInsets.all(AppSpacing.screenMargin),
-            child: LoadingSkeleton.summary(),
-          ),
-          error: (error, _) => ErrorState(
-            message: 'Gagal memuat ringkasan bacaan.',
-            onRetry: () => ref.invalidate(homeDataProvider),
-          ),
-          data: (home) => ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(AppSpacing.screenMargin),
-            children: [
-              // ---- Reading Summary (primary-500) ------------------------
-              StorylokaCard(
-                color: p.primary500,
-                child: _SummaryCard(home: home),
-              ),
-              const SizedBox(height: AppSpacing.cardGap),
-
-              // ---- Currently Reading ------------------------------------
-              if (home.stats.currentlyReading != null) ...[
-                const _SectionTitle('Currently Reading'),
-                _CurrentlyReadingCard(home: home),
-              ] else
+        ),
+        body: RefreshIndicator(
+          onRefresh: () async => ref.invalidate(homeDataProvider),
+          child: data.when(
+            loading: () => const SingleChildScrollView(
+              padding: EdgeInsets.all(AppSpacing.screenMargin),
+              child: LoadingSkeleton.summary(),
+            ),
+            error: (error, _) => ErrorState(
+              message: 'Gagal memuat ringkasan bacaan.',
+              onRetry: () => ref.invalidate(homeDataProvider),
+            ),
+            data: (home) => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(AppSpacing.screenMargin),
+              children: [
+                // ---- Reading Summary (primary-500) ------------------------
                 StorylokaCard(
-                  child: Row(
-                    children: [
-                      Icon(Icons.menu_book_outlined, color: p.neutral500),
-                      const SizedBox(width: AppSpacing.cardGap),
-                      Expanded(
-                        child: Text(
-                          'Belum ada buku yang sedang dibaca. '
-                          'Pilih dari koleksi atau tambah buku baru.',
-                          style: AppTypography.body2
-                              .copyWith(color: p.neutral500),
-                        ),
-                      ),
-                    ],
-                  ),
+                  color: p.primary500,
+                  child: _SummaryCard(home: home),
                 ),
-              const SizedBox(height: AppSpacing.cardGap),
+                const SizedBox(height: AppSpacing.cardGap),
 
-              // ---- Aksi Cepat -------------------------------------------
-              const _SectionTitle('Aksi Cepat'),
-              const _QuickActions(),
-              const SizedBox(height: AppSpacing.cardGap),
-
-              // ---- My Collection ----------------------------------------
-              Row(
-                children: [
-                  const Expanded(
-                    child: _SectionTitle(
-                      'My Collection',
-                      withPadding: false,
+                // ---- Currently Reading ------------------------------------
+                if (home.stats.currentlyReading != null) ...[
+                  const _SectionTitle('Currently Reading'),
+                  _CurrentlyReadingCard(home: home),
+                ] else
+                  StorylokaCard(
+                    child: Row(
+                      children: [
+                        Icon(Icons.menu_book_outlined, color: p.neutral500),
+                        const SizedBox(width: AppSpacing.cardGap),
+                        Expanded(
+                          child: Text(
+                            'Belum ada buku yang sedang dibaca. '
+                            'Pilih dari koleksi atau tambah buku baru.',
+                            style: AppTypography.body2.copyWith(
+                              color: p.neutral500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  TextButton(
-                    key: const ValueKey<String>('see-all-collection'),
-                    onPressed: () => context.push('/library'),
-                    child: const Text('Lihat semua'),
-                  ),
-                ],
-              ),
-              if (home.collection.isEmpty)
-                Text(
-                  'Belum ada buku. Tambahkan lewat tombol + di Library.',
-                  style: AppTypography.body2.copyWith(color: p.neutral500),
-                )
-              else
-                SizedBox(
-                  height: 300,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: home.collection.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(width: AppSpacing.cardGap),
-                    itemBuilder: (context, index) {
-                      final book = home.collection[index];
-                      return SizedBox(
-                        width: 110,
-                        child: BookCard(
-                          book: book,
-                          width: 110,
-                          onTap: () => context.push('/book/${book.id}'),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              const SizedBox(height: AppSpacing.cardGap),
+                const SizedBox(height: AppSpacing.cardGap),
 
-              // ---- Status backend & DB (DoD WF-01) ----------------------
-              _ConnectionStatus(
-                health: ref.watch(healthProvider),
-                database: ref.watch(databaseProvider),
-              ),
-              const SizedBox(height: AppSpacing.screenMargin),
-            ],
+                // ---- Aksi Cepat -------------------------------------------
+                const _SectionTitle('Aksi Cepat'),
+                const _QuickActions(),
+                const SizedBox(height: AppSpacing.cardGap),
+
+                // ---- My Collection ----------------------------------------
+                Row(
+                  children: [
+                    const Expanded(
+                      child: _SectionTitle('My Collection', withPadding: false),
+                    ),
+                    TextButton(
+                      key: const ValueKey<String>('see-all-collection'),
+                      onPressed: () => context.push('/library'),
+                      child: const Text('Lihat semua'),
+                    ),
+                  ],
+                ),
+                if (home.collection.isEmpty)
+                  Text(
+                    'Belum ada buku. Tambahkan lewat tombol + di Library.',
+                    style: AppTypography.body2.copyWith(color: p.neutral500),
+                  )
+                else
+                  SizedBox(
+                    height: 300,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: home.collection.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(width: AppSpacing.cardGap),
+                      itemBuilder: (context, index) {
+                        final book = home.collection[index];
+                        return SizedBox(
+                          width: 110,
+                          child: BookCard(
+                            book: book,
+                            width: 110,
+                            onTap: () => context.push('/book/${book.id}'),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.cardGap),
+
+                // ---- Status backend & DB (DoD WF-01) ----------------------
+                _ConnectionStatus(
+                  health: ref.watch(healthProvider),
+                  database: ref.watch(databaseProvider),
+                ),
+                const SizedBox(height: AppSpacing.screenMargin),
+              ],
+            ),
           ),
         ),
       ),
@@ -171,10 +177,7 @@ class _SectionTitle extends StatelessWidget {
               bottom: AppSpacing.grid,
             )
           : EdgeInsets.zero,
-      child: Text(
-        text,
-        style: AppTypography.h2.copyWith(color: p.textPrimary),
-      ),
+      child: Text(text, style: AppTypography.h2.copyWith(color: p.textPrimary)),
     );
   }
 }
@@ -192,17 +195,11 @@ class _SummaryCard extends StatelessWidget {
     final onPrimary = p.onPrimary;
 
     Widget cell(String value, String label) => Column(
-          children: [
-            Text(
-              value,
-              style: AppTypography.h1.copyWith(color: onPrimary),
-            ),
-            Text(
-              label,
-              style: AppTypography.caption.copyWith(color: onPrimary),
-            ),
-          ],
-        );
+      children: [
+        Text(value, style: AppTypography.h1.copyWith(color: onPrimary)),
+        Text(label, style: AppTypography.caption.copyWith(color: onPrimary)),
+      ],
+    );
 
     return Column(
       children: [
@@ -210,9 +207,7 @@ class _SummaryCard extends StatelessWidget {
           children: [
             Expanded(child: cell('${stats.readingCount}', 'Dibaca')),
             Expanded(child: cell('${stats.completedCount}', 'Selesai')),
-            Expanded(
-              child: cell('🔥 ${stats.streakDays}', 'Hari Streak'),
-            ),
+            Expanded(child: cell('🔥 ${stats.streakDays}', 'Hari Streak')),
           ],
         ),
         const SizedBox(height: AppSpacing.cardGap),
@@ -296,7 +291,7 @@ class _CurrentlyReadingCard extends ConsumerWidget {
                   book.pages == null
                       ? 'Halaman ${home.currentLastPage}'
                       : '${(home.currentProgress * 100).round()}% · '
-                          'halaman ${home.currentLastPage} dari ${book.pages}',
+                            'halaman ${home.currentLastPage} dari ${book.pages}',
                   style: AppTypography.body2.copyWith(color: p.neutral500),
                 ),
                 const SizedBox(height: AppSpacing.grid),
@@ -324,53 +319,82 @@ class _QuickActions extends ConsumerWidget {
     final p = AppColors.of(context);
 
     Widget action(String label, IconData icon, VoidCallback onTap) => Expanded(
-          child: InkWell(
-            onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.mediumAll,
+        child: Container(
+          height: 72,
+          decoration: BoxDecoration(
+            color: p.surface,
             borderRadius: AppRadius.mediumAll,
-            child: Container(
-              height: 72,
-              decoration: BoxDecoration(
-                color: p.surface,
-                borderRadius: AppRadius.mediumAll,
-                border: Border.all(color: p.neutral200),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, color: p.primary500),
-                  const SizedBox(height: AppSpacing.micro),
-                  Text(label, style: AppTypography.caption),
-                ],
-              ),
-            ),
+            border: Border.all(color: p.neutral200),
           ),
-        );
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: p.primary500),
+              const SizedBox(height: AppSpacing.micro),
+              Text(label, style: AppTypography.caption),
+            ],
+          ),
+        ),
+      ),
+    );
 
     return Row(
       children: [
-        action(
-          'Koleksi',
-          Icons.auto_stories_outlined,
-          () {
-            ref.read(libraryFilterProvider.notifier).setTab(LibraryTab.koleksi);
-            context.push('/library');
-          },
-        ),
+        action('Koleksi', Icons.auto_stories_outlined, () {
+          ref.read(libraryFilterProvider.notifier).setTab(LibraryTab.koleksi);
+          context.push('/library');
+        }),
         const SizedBox(width: AppSpacing.grid),
-        action(
-          'Wishlist',
-          Icons.favorite_outline,
-          () {
-            ref.read(libraryFilterProvider.notifier).setTab(LibraryTab.wishlist);
-            context.push('/library');
-          },
-        ),
+        action('Wishlist', Icons.favorite_outline, () {
+          ref.read(libraryFilterProvider.notifier).setTab(LibraryTab.wishlist);
+          context.push('/library');
+        }),
         const SizedBox(width: AppSpacing.grid),
         action('AI', Icons.auto_awesome_outlined, () => context.push('/ai')),
         const SizedBox(width: AppSpacing.grid),
-        action('Tambah', Icons.add_box_outlined, () => context.push('/book/edit')),
+        action(
+          'Tambah',
+          Icons.add_box_outlined,
+          () => context.push('/book/edit'),
+        ),
         const SizedBox(width: AppSpacing.grid),
         action('Cari', Icons.search, () => context.push('/search')),
+      ],
+    );
+  }
+}
+
+/// Ikon lonceng SCR-02 dengan titik merah bila ada notifikasi yang
+/// belum dibaca (dokumen desain Bagian 6 SCR-02).
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell({required this.unread});
+
+  final int unread;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = AppColors.of(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.notifications_outlined),
+        if (unread > 0)
+          Positioned(
+            right: 2,
+            top: 2,
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: p.danger500,
+                shape: BoxShape.circle,
+                border: Border.all(color: p.surface, width: 1.5),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -412,8 +436,9 @@ class _ConnectionStatus extends StatelessWidget {
       loading: () => '… Memeriksa backend…',
     );
     final dbText = database.when(
-      data: (db) =>
-          db == null ? '✗ Database terenkripsi belum terbuka' : '✓ Database terenkripsi terbuka',
+      data: (db) => db == null
+          ? '✗ Database terenkripsi belum terbuka'
+          : '✓ Database terenkripsi terbuka',
       error: (_, _) => '✗ Database gagal dibuka',
       loading: () => '… Membuka database…',
     );
