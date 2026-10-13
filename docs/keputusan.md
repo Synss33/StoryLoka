@@ -51,3 +51,12 @@ Prioritas jika konflik: **Ketentuan Dosen > deskripsi proyek > desain > workflow
 | 25 | **Feedback = satu baris per pengguna.** Klien `upsert` berdasarkan `user_id` (bukan id autoincrement); server `saveFeedback` memakai key = `user_id` di `sync.store`. | Desain SCR-10 hanya menyimpan "isi terakhir" dan mengeditnya kembali; aturan LWW per pengguna, tanpa tumpukan baris lama. |
 | 26 | **`[Level Pembaca]` dihitung dari jumlah buku selesai**: Pemula (<10), Rutin (10–49), Kutu Buku (≥50) — disimpan tidak perlu (selalu diturunkan dari statistik). | Desain menampilkan label tanpa aturan hitung; turunan lokal selalu konsisten dengan statistik profil. |
 | 27 | **`POST /feedback` best-effort + `GET /feedback` hanya bila data lokal kosong** (lokal-first). Setelah POST sukses baris ditandai `synced=1`; gagal → tetap antrean `/sync`. | Deskripsi Bagian 5.13 "disimpan lokal dan dikirim"; tarik server hanya saat perangkat belum punya isi agar coretan belum terkirim tidak tertimpa. |
+
+## WF-05 Library, Tracker, Pencarian, Konverter
+
+| # | Keputusan | Alasan |
+|---|---|---|
+| 28 | **Kurs mata uang dari `GET /rates` backend** (penyedia open.er-api.com, TTL 6 jam, fallback bawaan) dengan cache SQLite tabel `rate_cache`; pencarian buku tetap Google Books/Open Library tanpa key. | Keputusan 18 (proyek $0) + deskripsi Bagian 5.12 "cache untuk offline"; backend menjembatani agar tidak ada API key di aplikasi dan pemakaian kuota terkendali. |
+| 29 | **Semua `showModalBottomSheet` memakai `useRootNavigator: true`.** | Bottom sheet yang dibuka di dalam Navigator cabang `StatefulShellRoute` berada **di bawah** bottom nav (Zona 4, `Scaffold.bottomNavigationBar`) → tombol sheet (mis. "Terapkan") bisa terkena tap nav dan berpindah tab (terdeteksi saat TC-14). |
+| 30 | **Stopwatch sesi memakai `SessionTimer` berbasis timestamp** (`start_ts` + akumulasi jeda), tampilan diperbarui `Timer.periodic` 1 dtk; durasi disimpan dari selisih waktu nyata. | Ketentuan dosen: akurat ±1 dtk meski aplikasi pindah ke latar belakang (TC-15); penghitung per detik akan meleset karena timer berhenti saat background. |
+| 31 | **Carousel "My Collection" di SCR-02 memakai tinggi 300 dp** (kartu `BookCard` lebar 110 dp). | Cover 2:3 (165 dp) + judul 2 baris + penulis + rating/badge ≈ 261-290 dp; tinggi 240 dp menyebabkan overflow 49 dp (terdeteksi widget test TC-16). |

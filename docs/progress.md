@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-10 · **Branch aktif:** `develop` @ `a89e4b9` (WF-01…WF-04 sudah di-merge)
+**Terakhir diperbarui:** 2026-10-13 · **Branch aktif:** `feature/wf-05-library` (WF-01…WF-04 sudah di-merge ke `develop` @ `a89e4b9`)
 
 ## Status Ringkas
 
@@ -17,7 +17,7 @@
 | WF-02 | Auth, Session, Biometrik, Logout | ✅ **Selesai** (sisa verifikasi HP — lihat bawah) | 2 |
 | WF-03 | Data Lokal & Online | ✅ **Selesai** | 2 |
 | WF-04 | Navigasi, Profil, Kesan | ✅ **Selesai** (sisa screenshot HP) | 2 |
-| WF-05 | Library, Tracker, Pencarian, Konverter | ⬜ Belum | 2–3 |
+| WF-05 | Library, Tracker, Pencarian, Konverter | ✅ **Selesai** (sisa screenshot HP) | 2–3 |
 | WF-06 | Sensor, LBS, Notifikasi | ⬜ Belum | 3 |
 | WF-07 | AI / LLM (via backend) | ⬜ Belum | 4 |
 | WF-08 | Blockchain (hash chain) | ⬜ Belum | 4 |
@@ -163,17 +163,45 @@ backend/src/           routes/feedback.route, controllers/feedback.controller
 test/                  profile_test, edit_profile_test (TC-10), feedback_flow_test (TC-11)
 ```
 
-## ⬜ WF-05 Library, Tracker, Pencarian, Konverter (F-10, F-17–F-19 · SCR-02, 03, 06, 07, 08, 15, 04)
+## ✅ WF-05 Library, Tracker, Pencarian, Konverter — SELESAI (2026-10-13)
 
-- [ ] SCR-03 Koleksi & Wishlist: daftar buku, filter chip status, FAB tambah.
-- [ ] SCR-07 Tambah/Edit Buku: validasi (judul wajib, halaman ≥ 1), sampul (galeri/kamera/manual).
-- [ ] SCR-06 Detail Buku: progres, total jam, streak, ulasan & rating wajib saat selesai → picu blockchain (WF-08).
-- [ ] SCR-15 Sesi Baca: **stopwatch dari timestamp** (akurat di latar belakang), input halaman terakhir, target bulanan.
-- [ ] SCR-08 Pencarian: lokal (judul/penulis/ISBN) + online (Google Books/Open Library) → pilih → form terisi.
-- [ ] Filter (genre, status, rating, tahun) & sort (terbaru, judul, rating).
-- [ ] SCR-02 Beranda: ringkasan (buku sedang dibaca, target, streak) dari data nyata.
-- [ ] Konverter: kurs IDR/USD/EUR/JPY (`GET /rates`, cache offline) + zona waktu WIB/WITA/WIT/London (DST).
-- [ ] Test: TC-12…TC-18.
+### Checklist WF-05
+- [x] SCR-03 Koleksi & Wishlist: daftar buku, filter chip status, FAB tambah.
+- [x] SCR-07 Tambah/Edit Buku: validasi (judul wajib, halaman ≥ 1), sampul (galeri/kamera/manual).
+- [x] SCR-06 Detail Buku: progres, total jam, streak, ulasan & rating wajib saat selesai → picu blockchain (WF-08).
+- [x] SCR-15 Sesi Baca: **stopwatch dari timestamp** (akurat di latar belakang), input halaman terakhir, target bulanan.
+- [x] SCR-08 Pencarian: lokal (judul/penulis/ISBN) + online (Google Books/Open Library) → pilih → form terisi.
+- [x] Filter (genre, status, rating, tahun) & sort (terbaru, judul, rating).
+- [x] SCR-02 Beranda: ringkasan (buku sedang dibaca, target, streak) dari data nyata.
+- [x] Konverter: kurs IDR/USD/EUR/JPY (`GET /rates`, cache offline) + zona waktu WIB/WITA/WIT/London (DST).
+- [x] Test: TC-12…TC-18 lulus (`test/library_flow_test.dart` TC-12…16, `test/converter_test.dart` TC-17…18).
+- [x] `dart analyze lib test` bersih · `flutter test` **55/55** · `npm test` **21/21** (endpoint `GET /rates`).
+- [ ] Screenshot Light & Dark SCR-02, 03, 04, 06, 07, 08, 15 — butuh HP fisik.
+
+### Catatan teknis (rincian di `docs/keputusan.md` 28–31)
+- Stopwatch sesi memakai `SessionTimer` berbasis timestamp (jeda diakumulasi) — durasi tetap akurat saat aplikasi di latar belakang (TC-15).
+- Semua `showModalBottomSheet` memakai `useRootNavigator: true` — sheet sebelumnya tersembunyi di balik bottom nav (Zona 4) sehingga tombol sheet bisa terkena tap nav.
+- Kartu koleksi Beranda: tinggi carousel 300 dp agar cover 2:3 + 2 baris judul tidak overflow.
+- Kurs dari `GET /rates` (tanpa API key) + cache SQLite `rate_cache`; label "Diperbarui …" memakai `fetchedAt`.
+
+### File kunci yang dibuat
+```
+lib/features/library/        library_screen (SCR-03), library_data, filter_sheet,
+                             book_tile (BookCard/BookTile), add_book_screen (SCR-07)
+lib/features/search/         search_screen (SCR-08), search_data (hasil online)
+lib/features/book_detail/    book_detail_screen (SCR-06), book_detail_data, completion
+                             (dialog selesai + ulasan wajib → hook WF-08)
+lib/features/reading_session/reading_session_screen (SCR-15), session_timer
+lib/features/home/           home_screen (SCR-02), home_data (ReadingStats)
+lib/features/explore/        explore_screen (segmen SCR-04), converter_panel (kurs + waktu)
+lib/core/network/            book_search_service, rates_service
+lib/core/utils/              currency, world_clock, reading_stats
+lib/core/db/                 rate_cache_repository, book_repository (+filter), 
+                             reading_session_repository (+furthestPage/totalDurationSec)
+backend/src/                 routes/rates.route, controllers/rates.controller,
+                             services/rate.store (fallback + TTL 6 jam)
+test/                        library_flow_test (TC-12…16), converter_test (TC-17…18)
+```
 
 ## ⬜ WF-06 Sensor, LBS, Notifikasi (F-14–F-16 · SCR-02, 04, 09, 14)
 
