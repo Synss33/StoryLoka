@@ -135,7 +135,7 @@ Kode `SCR-xx` ada di `referensi_desain_ui_ux.md`, `WF-xx` di `workflow_proyek.md
 | `reviews` | id, book_id, rating, text, created_at |
 | `blocks` | idx, user_id, timestamp, book_id, review_hash, finished_date, previous_hash, hash |
 | `feedback` | id, user_id, kesan, saran, updated_at, synced |
-| `settings` | user_id, biometric_enabled, reminder_on, reminder_time, theme_mode, monthly_target, last_sync |
+| `settings` | user_id, biometric_enabled, reminder_on, reminder_time, theme_mode, streak_notify, monthly_target, last_sync |
 | `game_scores` | id, user_id, score, coins, played_at |
 | `notifications` | id, user_id, type, title, body, ref, read, created_at |
 | `rate_cache` | currency, rate_to_idr, fetched_at |
