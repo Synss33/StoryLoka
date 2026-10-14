@@ -54,14 +54,16 @@ class NotificationCoordinator {
   }
 
   Future<void> syncMissedReminder(int userId) async {
-    final settingsRepo = await _ref.read(settingsRepositoryProvider.future);
+    // Baca sinkron via AsyncValue — provider sudah terisi sejak splash;
+    // menghindari await provider.future dari konteks zona nyata.
+    final settingsRepo = _ref.read(settingsRepositoryProvider).value;
     final settings = await settingsRepo?.read(userId);
     if (settings == null || !settings.reminderOn) return;
 
     final due = _todayAt(settings.reminderTime);
     if (due == null || !DateTime.now().isAfter(due)) return;
 
-    final repo = await _ref.read(notificationRepositoryProvider.future);
+    final repo = _ref.read(notificationRepositoryProvider).value;
     if (repo == null) return;
     if (await repo.existsToday(userId, 'reminder')) return;
     await repo.insert(
@@ -81,7 +83,7 @@ class NotificationCoordinator {
   Future<void> applyReminder(int userId) async {
     try {
       await init();
-      final settingsRepo = await _ref.read(settingsRepositoryProvider.future);
+      final settingsRepo = _ref.read(settingsRepositoryProvider).value;
       final settings = await settingsRepo?.read(userId);
       if (settings == null) return;
 
@@ -119,7 +121,7 @@ class NotificationCoordinator {
   }) async {
     try {
       await init();
-      final repo = await _ref.read(notificationRepositoryProvider.future);
+      final repo = _ref.read(notificationRepositoryProvider).value;
       if (repo == null) return;
       if (dedupePerDay && await repo.existsToday(userId, type)) return;
 
@@ -151,11 +153,11 @@ class NotificationCoordinator {
   /// (menghormati toggle "Notifikasi target & streak" di SCR-09).
   Future<void> notifySessionMilestones(int userId) async {
     try {
-      final settingsRepo = await _ref.read(settingsRepositoryProvider.future);
+      final settingsRepo = _ref.read(settingsRepositoryProvider).value;
       final settings = await settingsRepo?.read(userId);
       if (settings == null || !settings.streakNotify) return;
 
-      final db = await _ref.read(databaseProvider.future);
+      final db = _ref.read(databaseProvider).value;
       if (db == null) return;
       final stats = await ReadingStats.load(db, userId);
 
@@ -213,7 +215,7 @@ class NotificationCoordinator {
 
     if (userId != null) {
       try {
-        final repo = await _ref.read(notificationRepositoryProvider.future);
+        final repo = _ref.read(notificationRepositoryProvider).value;
         if (repo != null) {
           // Pengingat yang diketak langsung tercatat bila belum ada hari ini
           // (yang tidak diketak menyusul lewat pemeriksaan saat splash).

@@ -83,6 +83,12 @@ class _FakeNotificationService implements NotificationService {
 
 /// Test case WF-06 notifikasi: TC-23 (set jam +1 menit → dijadwalkan &
 /// tercatat di SCR-14) plus aksi Tandai Semua Dibaca.
+///
+/// Catatan zona async: `await provider.future` dari `tester.runAsync`
+/// (zona nyata) dapat menggantung pada Riverpod 3.4 + flutter_test bila
+/// penyelesaian future terkait zona fake (lihat keputusan 32). Karena itu
+/// koordinator membaca provider secara sinkron (`AsyncValue.valueOrNull`)
+/// dan penulisan setelan TC-23 memakai `SettingsRepository` langsung.
 void main() {
   late InMemoryAuthStore store;
   late Database db;
@@ -115,7 +121,8 @@ void main() {
     }
   });
 
-  Future<void> pumpApp(WidgetTester tester) async {
+  /// Membuat pengguna uji + sesi (tanpa membangun widget).
+  Future<void> registerUser(WidgetTester tester) async {
     final user = await tester.runAsync(
       () => UserRepository(db).register(
         name: 'Pengguna Uji',
@@ -126,6 +133,10 @@ void main() {
     userId = user?.id ?? 1;
     store = InMemoryAuthStore()
       ..session = SessionRules.create(userId);
+  }
+
+  /// Menyalakan aplikasi dari splash sampai beranda.
+  Future<void> bootApp(WidgetTester tester) async {
     appRouter.go('/splash');
     await tester.pumpWidget(
       ProviderScope(
@@ -143,6 +154,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> pumpApp(WidgetTester tester) async {
+    await registerUser(tester);
+    await bootApp(tester);
+  }
+
   testWidgets(
       'TC-23: set jam +1 menit → dijadwalkan & tercatat di SCR-14',
       (tester) async {
@@ -157,8 +173,7 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(StorylokaApp)),
       );
-      final settings = await container.read(settingsRepositoryProvider.future);
-      await settings?.setReminder(userId, on: true, time: time);
+      await SettingsRepository(db).setReminder(userId, on: true, time: time);
       await container
           .read(notificationCoordinatorProvider)
           .applyReminder(userId);
@@ -195,15 +210,14 @@ void main() {
 
   testWidgets('SCR-14: Tandai Semua Dibaca menghapus titik belum dibaca',
       (tester) async {
-    await pumpApp(tester);
-
+    // Riwayat ditanam lebih dulu (pada dasarnya notifikasi dari sesi
+    // sebelumnya) sebelum aplikasi menyala, sehingga lonceng SCR-02 dan
+    // pusat notifikasi membaca data yang sama.
+    await registerUser(tester);
     final now = DateTime.now().millisecondsSinceEpoch;
     await tester.runAsync(() async {
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(StorylokaApp)),
-      );
-      final repo = await container.read(notificationRepositoryProvider.future);
-      await repo?.insert(
+      final repo = NotificationRepository(db);
+      await repo.insert(
         AppNotification(
           userId: userId,
           type: 'target',
@@ -213,7 +227,7 @@ void main() {
           createdAt: now,
         ),
       );
-      await repo?.insert(
+      await repo.insert(
         AppNotification(
           userId: userId,
           type: 'streak',
@@ -224,6 +238,7 @@ void main() {
         ),
       );
     });
+    await bootApp(tester);
 
     appRouter.push('/notifications');
     await tester.pumpAndSettle();
