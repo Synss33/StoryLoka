@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-13 · **Branch aktif:** `feature/wf-05-library` (WF-01…WF-04 sudah di-merge ke `develop` @ `a89e4b9`)
+**Terakhir diperbarui:** 2026-10-14 · **Branch aktif:** `feature/wf-06-sensor` (WF-01…WF-05 sudah di-merge ke `develop` @ `1162de3`)
 
 ## Status Ringkas
 
@@ -18,7 +18,7 @@
 | WF-03 | Data Lokal & Online | ✅ **Selesai** | 2 |
 | WF-04 | Navigasi, Profil, Kesan | ✅ **Selesai** (sisa screenshot HP) | 2 |
 | WF-05 | Library, Tracker, Pencarian, Konverter | ✅ **Selesai** (sisa screenshot HP) | 2–3 |
-| WF-06 | Sensor, LBS, Notifikasi | ⬜ Belum | 3 |
+| WF-06 | Sensor, LBS, Notifikasi | ✅ **Selesai** (sisa screenshot HP) | 3 |
 | WF-07 | AI / LLM (via backend) | ⬜ Belum | 4 |
 | WF-08 | Blockchain (hash chain) | ⬜ Belum | 4 |
 | WF-09 | Mini Game | ⬜ Belum | 4 |
@@ -203,13 +203,34 @@ backend/src/                 routes/rates.route, controllers/rates.controller,
 test/                        library_flow_test (TC-12…16), converter_test (TC-17…18)
 ```
 
-## ⬜ WF-06 Sensor, LBS, Notifikasi (F-14–F-16 · SCR-02, 04, 09, 14)
+## ✅ WF-06 Sensor, LBS, Notifikasi — SELESAI (2026-10-14)
 
-- [ ] Shake (accelerometer): pilih buku acak dari Wishlist + haptic; threshold anti-salah-picu.
-- [ ] Auto-theme sensor cahaya (Android) → mode `auto`; fallback tema sistem di iOS.
-- [ ] SCR-04 Peta: OpenStreetMap (tanpa API key) lokasi perpustakaan/rute; izin lokasi + kartu ajakan bila ditolak.
-- [ ] SCR-14 Notifikasi: pengingat baca terjadwal (izin Android 13+), riwayat tercatat.
-- [ ] Test: TC-19…TC-23.
+### Checklist WF-06
+- [x] Shake (accelerometer): pilih buku acak dari Wishlist + haptic; ambang 12 m/s², jendela 600 ms, debounce 1500 ms (anti salah-picu).
+- [x] Auto-theme sensor cahaya (Android): lux < 15 ≥ 2 dtk → gelap, > 40 → terang (histeresis); fallback tema sistem di iOS.
+- [x] SCR-04 Peta: OpenStreetMap + Overpass tanpa API key; izin lokasi runtime + kartu ajakan bila ditolak; titik perpustakaan statis.
+- [x] SCR-14 Notifikasi: pengingat harian dari SCR-09 (`scheduleDaily`, izin Android 13+), riwayat tercatat (`type|userId|rute`), ketuk notifikasi → catat + buka rute; "Tandai Semua Dibaca".
+- [x] Test: **TC-19…TC-23 lulus** — `shake_test` (TC-19/20), `auto_theme_test` (TC-21), `lbs_test` (TC-22), `notification_test` (TC-23 + tombol Tandai Semua Dibaca; TC-23 lulus 3× berturut-turut).
+- [x] `dart analyze lib test` bersih · `flutter test` **63/63** · `npm test` **21/21**.
+- [ ] Screenshot Light & Dark SCR-04, 09 (toggle), 14 — butuh HP fisik.
+
+### Catatan teknis (rincian di `docs/keputusan.md` 32–35)
+- Notifikasi sistem lewat abstraksi `NotificationService` + seam fake di test; payload `type|userId|rute` untuk riwayat + navigasi.
+- `NotificationCoordinator` membaca provider sinkron (`AsyncValue.value`) — `await provider.future` dari `tester.runAsync` (zona nyata) menggantung pada Riverpod 3.4 + flutter_test; TC-23 menulis setelan via `SettingsRepository(db)` langsung.
+- Android perlu `coreLibraryDesugaring` (`desugar_jdk_libs` 2.1.4) untuk `java.time` di `flutter_local_notifications`.
+
+### File kunci yang dibuat
+```
+lib/core/sensors/            sensor_streams, shake_detector, auto_theme
+lib/core/notifications/      notification_service (Android/iOS + fake host),
+                             notification_coordinator (riwayat + jadwal + rute)
+lib/features/notifications/  notifications_screen (SCR-14), notifications_data
+lib/features/explore/        peta_panel (SCR-04 OSM + Overpass + izin lokasi)
+lib/features/profile/        toggle pengingat → applyReminder (seam TC-23)
+android/                     izin POST_NOTIFICATIONS/lokasi + desugaring
+test/                        shake_test (TC-19…20), auto_theme_test (TC-21),
+                             lbs_test (TC-22), notification_test (TC-23 + SCR-14)
+```
 
 ## ⬜ WF-07 AI / LLM via Backend (F-11 · SCR-05, 06)
 
