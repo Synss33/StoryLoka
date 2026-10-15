@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-14 · **Branch aktif:** `feature/wf-06-sensor` (WF-01…WF-05 sudah di-merge ke `develop` @ `1162de3`)
+**Terakhir diperbarui:** 2026-10-14 · **Branch aktif:** `feature/wf-07-ai` (WF-01…WF-06 sudah di-merge ke `develop` @ `1bca365`)
 
 ## Status Ringkas
 
@@ -19,7 +19,7 @@
 | WF-04 | Navigasi, Profil, Kesan | ✅ **Selesai** (sisa screenshot HP) | 2 |
 | WF-05 | Library, Tracker, Pencarian, Konverter | ✅ **Selesai** (sisa screenshot HP) | 2–3 |
 | WF-06 | Sensor, LBS, Notifikasi | ✅ **Selesai** (sisa screenshot HP) | 3 |
-| WF-07 | AI / LLM (via backend) | ⬜ Belum | 4 |
+| WF-07 | AI / LLM (via backend) | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-08 | Blockchain (hash chain) | ⬜ Belum | 4 |
 | WF-09 | Mini Game | ⬜ Belum | 4 |
 | WF-10 | Testing | ⬜ Belum | 5 |
@@ -232,12 +232,35 @@ test/                        shake_test (TC-19…20), auto_theme_test (TC-21),
                              lbs_test (TC-22), notification_test (TC-23 + SCR-14)
 ```
 
-## ⬜ WF-07 AI / LLM via Backend (F-11 · SCR-05, 06)
+## ✅ WF-07 AI / LLM via Backend — SELESAI (2026-10-14)
 
-- [ ] Backend proxy: `POST /ai/chat`, `POST /ai/summarize`, `POST /ai/recommend` (Gemini, **API key hanya di `.env` server**).
-- [ ] SCR-05 AI Assistant: chat + konteks buku; loading, timeout, pesan kuota/offline.
-- [ ] Ringkasan buku di SCR-06; hasil di-cache lokal; label **"Dihasilkan AI"**.
-- [ ] Test: TC-24, TC-25.
+### Checklist WF-07
+- [x] Backend proxy `POST /ai/chat`, `/ai/summarize`, `/ai/recommend` (requireAuth; Gemini; **API key hanya di `.env` server**); galat ternormalisasi `AI_QUOTA` (429), `AI_TIMEOUT` (504), `AI_UPSTREAM` (502), `AI_DISABLED` (503, tanpa key), `AI_MOCK=1` untuk mock.
+- [x] SCR-05 AI Assistant: chat + konteks buku (query `?book=<id>` dari SCR-06), quick action Ringkasan/Buku Mirip/Jelaskan, state AI mengetik (tiga titik), galat + **Coba Lagi**, pesan kuota, offline → input dinonaktifkan + banner (TC-25), label **"Dihasilkan AI"**.
+- [x] Ringkasan buku di SCR-06 (kartu ✨ AI: Ringkas dengan AI / Tanya AI); hasil di-cache lokal tabel `ai_cache`; label "Dihasilkan AI"; error → Coba Lagi.
+- [x] Test: **TC-24, TC-25 lulus** (`test/ai_test.dart`: ringkasan + label + buka SCR-05 dari Tanya AI; offline → input mati + banner; gagal kirim → pesan + Coba Lagi).
+- [x] `dart analyze lib test` bersih · `flutter test` **66/66** · `npm test` **26/26**.
+- [ ] Screenshot Light & Dark SCR-05, SCR-06 (kartu AI) — butuh HP fisik.
+
+### Catatan teknis (rincian di `docs/keputusan.md` 36–38)
+- Klien `AiService` memetakan `error.code` backend ke `AiFailure` (offline/quota/disabled/error) agar SCR-05/06 menampilkan pesan + aksi yang tepat.
+- Ringkasan di-cache per buku (`summary:<bookId>`) — dibaca dulu, baru panggil backend; simpan best-effort.
+- Kartu AI di SCR-06 berada di dalam `ListView` lazy: test harus `scrollUntilVisible` sebelum tap.
+
+### File kunci yang dibuat
+```
+backend/src/                 services/ai.service (prompt sistem topik buku +
+                             bahasa Indonesia, Gemini + timeout + mock),
+                             controllers/ai.controller, routes/ai.route,
+                             env (geminiModel/aiTimeoutMs/aiMock), app.js (/ai)
+backend/test/                ai.test (5 test: auth + chat/summarize/recommend + 400)
+lib/core/network/            ai_service (AiResult/AiFailure + chat/summarize/recommend)
+lib/core/db/                 schema v4 (+tabel ai_cache), ai_cache_repository
+lib/features/ai/             ai_assistant_screen (SCR-05 penuh)
+lib/features/book_detail/    book_ai_card (kartu ✨ AI SCR-06),
+                             router /ai?book=<id>
+test/                        ai_test (TC-24, TC-25)
+```
 
 ## ⬜ WF-08 Blockchain (F-12 · SCR-06)
 

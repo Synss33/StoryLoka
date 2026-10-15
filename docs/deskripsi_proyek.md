@@ -139,6 +139,7 @@ Kode `SCR-xx` ada di `referensi_desain_ui_ux.md`, `WF-xx` di `workflow_proyek.md
 | `game_scores` | id, user_id, score, coins, played_at |
 | `notifications` | id, user_id, type, title, body, ref, read, created_at |
 | `rate_cache` | currency, rate_to_idr, fetched_at |
+| `ai_cache` | key (`summary:<bookId>`), user_id, content, created_at |
 
 ERD final dibuat di laporan Bab Perancangan.
 
