@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 
 import { errorHandler, notFoundHandler } from './middleware/error.handler.js';
+import aiRouter from './routes/ai.route.js';
 import authRouter from './routes/auth.route.js';
 import feedbackRouter from './routes/feedback.route.js';
 import healthRouter from './routes/health.route.js';
@@ -20,8 +21,7 @@ import syncRouter from './routes/sync.route.js';
  *   POST /sync             -> sinkronisasi dua arah (WF-03, Bearer token)
  *   POST/GET /feedback     -> kesan & saran PAM (WF-04, Bearer token)
  *   GET  /rates            -> kurs mata uang konverter (WF-05, Bearer token)
- * Endpoint lain (/ai/*) menyusul di WF-07 sesuai
- * `docs/deskripsi_proyek.md` Bagian 5.2.
+ *   POST /ai/chat|summarize|recommend -> proxy Gemini (WF-07, Bearer token)
  */
 export function createApp() {
   const app = express();
@@ -35,6 +35,7 @@ export function createApp() {
   app.use('/sync', syncRouter);
   app.use('/feedback', feedbackRouter);
   app.use('/rates', ratesRouter);
+  app.use('/ai', aiRouter);
 
   // Urutan wajib: 404 dulu, error handler di paling akhir.
   app.use(notFoundHandler);

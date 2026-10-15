@@ -99,8 +99,11 @@ final GoRouter appRouter = GoRouter(
 
     // ---- Layar fokus (bottom nav disembunyikan) -------------------------
     GoRoute(
+      // Query `?book=` = konteks buku dari SCR-06 ("Tanya AI") — WF-07.
       path: '/ai',
-      builder: (context, state) => const AiAssistantScreen(), // SCR-05
+      builder: (context, state) => AiAssistantScreen(
+        bookId: int.tryParse(state.uri.queryParameters['book'] ?? ''),
+      ), // SCR-05
     ),
     // Rute statis `/book/edit` didahulukan agar tidak tertangkap `/book/:id`.
     // Query `?id=` = mode edit; `extra` = hasil pencarian online (TC-13).

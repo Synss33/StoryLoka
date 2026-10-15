@@ -20,6 +20,7 @@ import '../../core/widgets/top_bar.dart';
 import '../home/home_data.dart';
 import '../library/book_tile.dart';
 import '../library/library_data.dart';
+import 'book_ai_card.dart';
 import 'book_detail_data.dart';
 import 'completion.dart';
 
@@ -355,12 +356,7 @@ class _DetailBody extends ConsumerWidget {
         const SizedBox(height: AppSpacing.cardGap),
 
         // ---- AI (WF-07) & Blockchain (WF-08) ---------------------------
-        const _ModulePlaceholder(
-          icon: Icons.auto_awesome_outlined,
-          title: '✨ AI: Ringkasan & Tanya AI',
-          description:
-              'Aksi AI tersedia pada modul WF-07 (backend proxy Gemini).',
-        ),
+        BookAiCard(detail: detail),
         if (status == BookStatus.completed) ...[
           const SizedBox(height: AppSpacing.cardGap),
           const _ModulePlaceholder(

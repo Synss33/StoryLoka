@@ -11,6 +11,12 @@ export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   // API key Gemini untuk proxy LLM (WF-07). Kosong sampai diisi di `.env`.
   geminiApiKey: process.env.GEMINI_API_KEY ?? '',
+  // Model Gemini (WF-07) + timeout tunggu balasan upstream.
+  geminiModel: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash',
+  aiTimeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 20000),
+  // Mode mock (WF-07): balasan tetap tanpa jaringan — untuk test deterministik
+  // (dipakai backend/test/ai.test.js, setara RATES_OFFLINE).
+  aiMock: process.env.AI_MOCK === '1',
   // Kurs (F-17, WF-05): provider publik tanpa API key, TTL cache server,
   // dan mode luring untuk pengujian deterministik (RATES_OFFLINE=1).
   ratesProviderUrl:

@@ -16,7 +16,8 @@ abstract final class AppDatabase {
   ///   dengan *last-write-wins* sinkronisasi (WF-03).
   /// * v3 = `settings.streak_notify` (toggle notifikasi target & streak
   ///   di SCR-09, WF-04; penjadwalannya WF-06).
-  static const int version = 3;
+  /// * v4 = tabel `ai_cache` (cache ringkasan AI SCR-06, WF-07).
+  static const int version = 4;
 
   /// Nama berkas database terenkripsi.
   static const String fileName = 'storyloka.db';
@@ -191,6 +192,18 @@ abstract final class AppDatabase {
       )
     ''');
 
+    // Cache ringkasan AI per buku (Bagian 5.6 — "hasil ringkasan
+    // di-cache lokal"); `key` mis. `summary:<bookId>` (WF-07).
+    batch.execute('''
+      CREATE TABLE ai_cache (
+        key        TEXT PRIMARY KEY,
+        user_id    INTEGER NOT NULL,
+        content    TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
+
     await batch.commit(noResult: true);
   }
 
@@ -212,6 +225,18 @@ abstract final class AppDatabase {
       await db.execute(
         'ALTER TABLE settings ADD COLUMN streak_notify INTEGER NOT NULL DEFAULT 1',
       );
+    }
+    if (oldVersion < 4) {
+      // WF-07: cache ringkasan AI (Bagian 5.6) agar tampil saat offline.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS ai_cache (
+          key        TEXT PRIMARY KEY,
+          user_id    INTEGER NOT NULL,
+          content    TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+      ''');
     }
   }
 }
