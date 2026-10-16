@@ -78,3 +78,10 @@ Prioritas jika konflik: **Ketentuan Dosen > deskripsi proyek > desain > workflow
 | 37 | **Klien `AiService` memetakan `error.code`/status backend ke enum `AiFailure` (`offline`, `quota` 429, `disabled` 503, `error`)** — setiap kegagalan berubah jadi hasil `AiResult.failed` dengan pesan + aksi yang jelas di UI (Coba Lagi, input mati saat offline). | SCR-05/06 wajib menampilkan state offline/kuota/galat sesuai desain; pemetaan terpusat menghindari penanganan duplikat di tiap layar. |
 | 38 | **Tabel `ai_cache` (skema v4): ringkasan per buku di-cache lokal dengan key `summary:<bookId>`** — dibaca dulu; baru panggil backend bila kosong; hasil sukses disimpan best-effort. | Deskripsi Bagian 5.6 "hasil ringkasan di-cache lokal"; tetap tampil saat offline dan menghemat kuota. |
 | 39 | **Test SCR-06 memakai `tester.scrollUntilVisible`** sebelum mengetuk kartu AI. | `ListView` (non-builder) Flutter tetap membangun child secara lazy (hanya viewport + cacheExtent); kartu AI di bawah lipatan tidak ada di tree sampai digulir. |
+
+## Build Android & Instal ke HP (2026-10-16)
+
+| # | Keputusan | Alasan |
+|---|---|---|
+| 40 | **`light_sensor` di-vendor ke `packages/light_sensor` (path dependency) dengan `build.gradle` yang diperbaiki**: `jcenter()` → `mavenCentral()`, classpath AGP 4.1.0 → 9.1.0, `minSdkVersion` 16 → 21; folder `packages/**` dikecualikan dari analyzer. | Paket `light_sensor` 3.0.2 (versi terbaru) masih memanggil `jcenter()` yang **dihapus di Gradle 9** (paket proyek) → `assembleRelease`/`assembleDebug` gagal saat konfigurasi proyek. Tidak ada versi perbaikan dari upstream (3.0.2 adalah rilis terakhir); vendor agar bisa diperbaiki di repo dan tahan bila pub cache dibersihkan. |
+| 41 | **Instalasi ke HP fisik memakai APK release arm64 + `adb install`** (`flutter build apk --release --target-platform android-arm64 --dart-define=API_BASE_URL=http://<ip-pc>:3000`), bukan `flutter run` debug. | APK debug 191 MB (`kernel_blob.bin` 101 MB + 3 ABI + validation layer) lambat dipindahkan ke HP Realme C2 dan dipindai Play Protect; release arm64 hanya 35,6 MB dan lebih ringan. Debug hanya untuk hot-reload saat pengembangan. |

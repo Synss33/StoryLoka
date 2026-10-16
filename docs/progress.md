@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-14 · **Branch aktif:** `feature/wf-07-ai` (WF-01…WF-06 sudah di-merge ke `develop` @ `1bca365`)
+**Terakhir diperbarui:** 2026-10-16 · **Branch aktif:** `feature/wf-07-ai` (WF-01…WF-06 sudah di-merge ke `develop` @ `1bca365`)
 
 ## Status Ringkas
 
@@ -288,3 +288,12 @@ test/                        ai_test (TC-24, TC-25)
 - [ ] Diagram: Use Case, ERD, Class Diagram, Flow (dari workflow Bagian 3).
 - [ ] Demo alur lengkap: login biometrik → tambah buku → sesi baca → selesai + ulasan → blockchain → AI → shake → LBS → konverter → kuis → kesan → logout.
 - [ ] Cadangan: video demo, APK/IPA siap, laporan tercetak + halaman pengesahan sebelum UAS.
+
+---
+
+## 📱 2026-10-16 — Build & instal APK ke HP fisik (persiapan screenshot)
+
+- **Build Android sempat rusak sejak WF-06**: `light_sensor` 3.0.2 memanggil `jcenter()` (dihapus di Gradle 9) → `assembleRelease` gagal. Diperbaiki dengan **vendor paket ke `packages/light_sensor`** + `build.gradle` diperbaiki (keputusan **40**); `packages/**` dikeluarkan dari analyzer.
+- **APK release arm64** dibuat dengan `--dart-define=API_BASE_URL=http://192.168.1.71:3000` → **35,6 MB** (vs debug 191 MB) dan **terpasang di HP Realme C2** (`com.storyloka.storyloka`) via `adb install` (keputusan **41**); aplikasi sudah dibuka di HP.
+- Backend Express dijalankan di PC (`node src/server.js`), `/health` OK di `0.0.0.0:3000`.
+- **Belum selesai:** aturan firewall inbound TCP 3000 butuh hak admin (perintah di komentar sesi ini) supaya HP bisa mengakses backend; screenshot Light & Dark semua SCR tetap menunggu HP (mulai WF-01/WF-02).

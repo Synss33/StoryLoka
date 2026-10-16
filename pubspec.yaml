@@ -50,7 +50,10 @@ dependencies:
   flutter_timezone: ^5.1.1
   flutter_map: ^8.3.2
   geolocator: ^14.1.1
-  light_sensor: ^3.0.2
+  # VENDOR FIX: paket asli (3.0.2) memakai jcenter() yang dihapus di Gradle 9,
+  # disalin ke packages/light_sensor dengan build.gradle yang diperbaiki.
+  light_sensor:
+    path: packages/light_sensor
   url_launcher: ^6.3.3
   latlong2: ^0.10.1
 
