@@ -46,6 +46,34 @@ class BlockRepository {
     return rows.first['max_idx'] as int?;
   }
 
+  /// Blok terakhir (idx terbesar) milik pengguna — dasar `previous_hash`
+  /// blok berikutnya saat buku baru selesai (WF-08).
+  Future<Block?> lastByUser(int userId) async {
+    final rows = await _db.query(
+      'blocks',
+      columns: _columns,
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'idx DESC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : Block.fromRow(rows.first);
+  }
+
+  /// Blok milik buku tertentu (sertifikat "Proof of Reading" SCR-06);
+  /// null bila buku belum pernah menghasilkan blok.
+  Future<Block?> findByBook(int userId, int bookId) async {
+    final rows = await _db.query(
+      'blocks',
+      columns: _columns,
+      where: 'user_id = ? AND book_id = ?',
+      whereArgs: [userId, bookId],
+      orderBy: 'idx DESC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : Block.fromRow(rows.first);
+  }
+
   /// Snapshot server: tambahkan blok yang belum dimiliki (idempoten).
   Future<void> applySnapshot(List<Block> serverBlocks) async {
     for (final block in serverBlocks) {

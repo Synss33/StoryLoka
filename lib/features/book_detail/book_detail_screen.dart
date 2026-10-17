@@ -20,6 +20,7 @@ import '../../core/widgets/top_bar.dart';
 import '../home/home_data.dart';
 import '../library/book_tile.dart';
 import '../library/library_data.dart';
+import '../blockchain/blockchain_card.dart';
 import 'book_ai_card.dart';
 import 'book_detail_data.dart';
 import 'completion.dart';
@@ -359,13 +360,7 @@ class _DetailBody extends ConsumerWidget {
         BookAiCard(detail: detail),
         if (status == BookStatus.completed) ...[
           const SizedBox(height: AppSpacing.cardGap),
-          const _ModulePlaceholder(
-            icon: Icons.link_outlined,
-            title: '🔗 Terverifikasi (Hash Chain Lokal)',
-            description:
-                'Kartu blockchain & Validasi Rantai dibuat pada modul WF-08 '
-                'dari ulasan buku ini.',
-          ),
+          BlockchainCard(book: detail.book, block: detail.block),
         ],
         const SizedBox(height: AppSpacing.screenMargin),
       ],
@@ -515,43 +510,6 @@ class _NoteTile extends StatelessWidget {
             child: Text(
               isQuote ? '"${note.content}"' : note.content,
               style: AppTypography.body1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Placeholder layar modul berikutnya (WF-07 AI / WF-08 blockchain).
-class _ModulePlaceholder extends StatelessWidget {
-  const _ModulePlaceholder({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = AppColors.of(context);
-    return StorylokaCard(
-      color: p.neutral100,
-      child: Row(
-        children: [
-          Icon(icon, color: p.secondary500),
-          const SizedBox(width: AppSpacing.cardGap),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTypography.h3),
-                const SizedBox(height: AppSpacing.micro),
-                Text(description, style: AppTypography.body2),
-              ],
             ),
           ),
         ],

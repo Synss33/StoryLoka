@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-16 · **Branch aktif:** `feature/wf-07-ai` (WF-01…WF-06 sudah di-merge ke `develop` @ `1bca365`)
+**Terakhir diperbarui:** 2026-10-17 · **Branch aktif:** `develop` (WF-01…WF-07 sudah di-merge @ `1bca365` + build fix `6fd3595`)
 
 ## Status Ringkas
 
@@ -20,7 +20,7 @@
 | WF-05 | Library, Tracker, Pencarian, Konverter | ✅ **Selesai** (sisa screenshot HP) | 2–3 |
 | WF-06 | Sensor, LBS, Notifikasi | ✅ **Selesai** (sisa screenshot HP) | 3 |
 | WF-07 | AI / LLM (via backend) | ✅ **Selesai** (sisa screenshot HP) | 4 |
-| WF-08 | Blockchain (hash chain) | ⬜ Belum | 4 |
+| WF-08 | Blockchain (hash chain) | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-09 | Mini Game | ⬜ Belum | 4 |
 | WF-10 | Testing | ⬜ Belum | 5 |
 | WF-11 | Laporan & Presentasi | ⬜ Belum | 5 |
@@ -262,12 +262,39 @@ lib/features/book_detail/    book_ai_card (kartu ✨ AI SCR-06),
 test/                        ai_test (TC-24, TC-25)
 ```
 
-## ⬜ WF-08 Blockchain (F-12 · SCR-06)
+## ✅ WF-08 Blockchain (F-12 · SCR-06) — SELESAI (2026-10-17)
 
-- [ ] Hash chain SHA-256 **lokal** (bukan kripto/NFT): blok dibuat saat buku selesai (bersama ulasan).
-- [ ] Validasi rantai (blok rusak → "Tidak Valid" + menunjuk blok bermasalah).
-- [ ] Tampilan sertifikat/rantai di SCR-06.
-- [ ] Test: TC-26, TC-27.
+### Checklist WF-08
+- [x] Hash chain SHA-256 **lokal** (bukan kripto/NFT): blok dibuat **otomatis di hook dialog ulasan** saat buku ditandai Selesai (`idx = max+1`, `previous_hash` = hash blok sebelumnya atau **64 nol (genesis)**, `review_hash` = SHA256(ulasan)); `hash` = SHA256 seluruh field dipisah `|`.
+- [x] Validasi rantai (workflow §3.4): hitung ulang `hash` + cocokkan `previous_hash` + kelengkapan idx → **✅ Valid** / **❌ Tidak Valid (blok ke-n)** yang menunjuk blok bermasalah.
+- [x] Kartu 🛡 **Blockchain di SCR-06** (hanya status Selesai): badge `success-500` "Terverifikasi (Hash Chain Lokal)", nomor blok, hash terpotong (`8f4a…e91c`), `previous_hash`, tanggal selesai, tombol **Validasi Rantai** + **Bagikan Sertifikat**.
+- [x] Sertifikat: dialog pratinjau (`RepaintBoundary.toImage` → PNG) → **Bagikan Gambar** via `share_plus` (abstraksi `CertificateShareService`).
+- [x] Notifikasi **"Sertifikat Diterbitkan"** (`type=certificate`, tanpa dedupe, rute `/book/<id>`) → riwayat SCR-14 + sistem.
+- [x] Statistik SCR-09 "Sertifikat" otomatis benar (menghitung tabel `blocks`); blok ikut `POST /sync` sebagai *anchor* server (Bagian 5.7 mitigasi).
+- [x] Test: **TC-26, TC-27 lulus** (+3 test unit `HashChain` + 1 pratinjau sertifikat) — `test/blockchain_test.dart`.
+- [x] `dart analyze lib test` bersih · `flutter test` **73/73** · `npm test` **26/26**.
+- [ ] Screenshot Light & Dark kartu blockchain + sertifikat di SCR-06 — butuh HP fisik.
+
+### Catatan teknis (rincian di `docs/keputusan.md` 42–45)
+- SHA-256 memakai **paket `crypto`** (sinkron) — `cryptography` hanya punya `hash()` async; `crypto` dijadikan dependensi langsung sesuai tech stack deskripsi Bagian 3.
+- Tangkap PNG **sebelum dialog ditutup** (widget `Offstage` tidak dilukis → `toImage` gagal); seam `CertificateShareService` agar test tanpa platform share.
+- Judul kartu ulasan & judul dialog di SCR-06 sama ("Ulasan & Rating") → test harus mencari via descendant `AlertDialog`.
+
+### File kunci yang dibuat
+```
+lib/core/blockchain/          hash_chain.dart (sha256Hex, buildBlock, validate,
+                              ChainValidation, shortHash)
+lib/core/db/                 block_repository (+lastByUser, +findByBook)
+lib/features/blockchain/     blockchain_card (kartu SCR-06 + validasi + share),
+                             reading_certificate (widget sertifikat),
+                             certificate_share_service (share_plus + seam)
+lib/features/book_detail/    completion (+blok +notifikasi sertifikat),
+                             book_detail_data (+field block),
+                             book_detail_screen (placeholder → BlockchainCard)
+test/                        blockchain_test (unit HashChain, TC-26, TC-27,
+                              pratinjau sertifikat)
+pubspec.yaml                 +share_plus 13, +crypto 3 (dependensi langsung)
+```
 
 ## ⬜ WF-09 Mini Game (F-13 · SCR-16)
 
@@ -297,3 +324,15 @@ test/                        ai_test (TC-24, TC-25)
 - **APK release arm64** dibuat dengan `--dart-define=API_BASE_URL=http://192.168.1.71:3000` → **35,6 MB** (vs debug 191 MB) dan **terpasang di HP Realme C2** (`com.storyloka.storyloka`) via `adb install` (keputusan **41**); aplikasi sudah dibuka di HP.
 - Backend Express dijalankan di PC (`node src/server.js`), `/health` OK di `0.0.0.0:3000`.
 - **Belum selesai:** aturan firewall inbound TCP 3000 butuh hak admin (perintah di komentar sesi ini) supaya HP bisa mengakses backend; screenshot Light & Dark semua SCR tetap menunggu HP (mulai WF-01/WF-02).
+
+---
+
+## ⛓ 2026-10-17 — WF-08 Blockchain (Proof of Reading) selesai
+
+- `HashChain` (`lib/core/blockchain/`): SHA-256 via paket **`crypto`** (sinkron — `cryptography` hanya async), `buildBlock` (genesis 64 nol), `validate` (idx urut + `previous_hash` + hitung ulang hash → `ChainValidation.brokenIndex`).
+- Hook di dialog ulasan (`completion.dart`): buku selesai → blok dibuat → notifikasi **"Sertifikat Diterbitkan"** (riwayat SCR-14, rute `/book/<id>`).
+- Kartu blockchain menggantikan placeholder di SCR-06: ringkas Blok #n · hash terpotong · tanggal; **Validasi Rantai** → ✅ Valid / ❌ Tidak Valid (blok ke-n); **Bagikan Sertifikat** → dialog pratinjau → PNG (`RepaintBoundary`) → `share_plus`.
+- Tambah dependensi: `share_plus` 13.3.1 + `crypto` 3.0.7 (keputusan **42–45**).
+- **Verifikasi:** `dart analyze lib test` bersih · `flutter test` **73/73** (TC-26, TC-27 + 5 test baru) · `npm test` **26/26**.
+- **Berikutnya:** WF-09 Mini Game (F-13 · SCR-16 — kuis 10 soal, timer, skor & koin di `game_scores`, TC-28).
+- Screenshot kartu blockchain/sertifikat masih menunggu HP fisik (bersama sisa screenshot WF-01…WF-07).

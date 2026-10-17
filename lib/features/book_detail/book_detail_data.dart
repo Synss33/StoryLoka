@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/db/block_repository.dart';
 import '../../core/db/book_repository.dart';
 import '../../core/db/database_provider.dart';
 import '../../core/db/note_quote_repository.dart';
 import '../../core/db/reading_session_repository.dart';
 import '../../core/db/review_repository.dart';
+import '../../core/models/block.dart';
 import '../../core/models/book.dart';
 import '../../core/models/note_quote.dart';
 import '../../core/models/review.dart';
@@ -12,7 +14,8 @@ import '../../core/utils/reading_stats.dart';
 import '../../features/auth/auth_controller.dart';
 
 /// Seluruh data SCR-06 dalam satu async provider: buku + progres halaman
-/// (dari sesi terakhir), total jam, streak, catatan, dan ulasan.
+/// (dari sesi terakhir), total jam, streak, catatan, ulasan, dan blok
+/// blockchain (sertifikat Proof of Reading, WF-08).
 class BookDetailData {
   const BookDetailData({
     required this.book,
@@ -21,6 +24,7 @@ class BookDetailData {
     required this.streakDays,
     required this.reviews,
     required this.notes,
+    this.block,
   });
 
   final Book book;
@@ -36,6 +40,9 @@ class BookDetailData {
 
   final List<Review> reviews;
   final List<NoteQuote> notes;
+
+  /// Blok hash chain milik buku ini (null bila belum selesai / belum ada).
+  final Block? block;
 
   /// 0…1 progres halaman; 0 bila halaman tidak diketahui.
   double get progress {
@@ -54,6 +61,7 @@ final bookDetailProvider = FutureProvider.autoDispose
   final reviewRepo = await ref.watch(reviewRepositoryProvider.future);
   final noteRepo = await ref.watch(noteQuoteRepositoryProvider.future);
   final bookRepo = await ref.watch(bookRepositoryProvider.future);
+  final blockRepo = await ref.watch(blockRepositoryProvider.future);
   if (db == null || bookRepo == null) return null;
 
   final book = await bookRepo.get(bookId);
@@ -69,5 +77,6 @@ final bookDetailProvider = FutureProvider.autoDispose
     streakDays: stats.streakDays,
     reviews: await reviewRepo?.listByBook(bookId) ?? const <Review>[],
     notes: await noteRepo?.listByBook(bookId) ?? const <NoteQuote>[],
+    block: await blockRepo?.findByBook(userId, bookId),
   );
 });

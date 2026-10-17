@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/blockchain/hash_chain.dart';
 import '../../core/db/book_repository.dart';
+import '../../core/db/block_repository.dart';
 import '../../core/db/review_repository.dart';
 import '../../core/models/book.dart';
 import '../../core/models/review.dart';
+import '../../core/notifications/notification_coordinator.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/buttons.dart';
 import '../home/home_data.dart';
 import '../library/library_data.dart';
+import 'book_detail_data.dart';
 
 /// Menandai buku **Selesai** — workflow Bagian 3.3:
 /// dialog konfirmasi → wajib ulasan & rating → status `completed` +
-/// `finished_at` → tabel `reviews`. Pembuatan blok hash chain
-/// menyusul bersama modul WF-08 (hook: setelah review tersimpan).
+/// `finished_at` → tabel `reviews` → **blok hash chain** (WF-08) +
+/// notifikasi "Sertifikat diterbitkan".
 ///
 /// Mengembalikan `true` bila buku berhasil ditandai selesai.
 Future<bool> markBookCompleted(
@@ -52,9 +56,11 @@ Future<bool> markBookCompleted(
   );
   if (saved != true) return false;
 
-  // Segarkan ringkasan Beranda & daftar Library (status & rating berubah).
+  // Segarkan ringkasan Beranda, daftar Library, dan detail buku
+  // (kartu blockchain SCR-08 baru muncul setelah blok dibuat).
   ref.invalidate(libraryBooksProvider);
   ref.invalidate(homeDataProvider);
+  if (book.id != null) ref.invalidate(bookDetailProvider(book.id!));
   return true;
 }
 
@@ -115,7 +121,37 @@ class _ReviewDialogState extends ConsumerState<_ReviewDialog> {
         updatedAt: now,
       ),
     );
-    // WF-08: di sini rantai hash "Proof of Reading" dibuat dari ulasan.
+
+    // WF-08: buat blok hash chain "Proof of Reading" dari ulasan
+    // (Bagian 5.7) — `previous_hash` = hash blok terakhir pengguna,
+    // atau 64 nol bila ini blok pertama (genesis).
+    final reviewText = _text.text.trim();
+    final blockRepo = await ref.read(blockRepositoryProvider.future);
+    final userId = widget.book.userId;
+    if (blockRepo != null) {
+      final last = await blockRepo.lastByUser(userId);
+      final block = HashChain.buildBlock(
+        idx: (last?.idx ?? -1) + 1,
+        userId: userId,
+        bookId: widget.book.id!,
+        reviewText: reviewText,
+        finishedDate: now,
+        previousHash: last?.hash ?? HashChain.genesisPreviousHash,
+        timestamp: now,
+      );
+      await blockRepo.append(block);
+    }
+
+    // Notifikasi "Sertifikat diterbitkan" → riwayat SCR-14 + ketuk buka SCR-06.
+    await ref.read(notificationCoordinatorProvider).emitEvent(
+          userId: userId,
+          type: 'certificate',
+          title: 'Sertifikat Diterbitkan',
+          body: '"${widget.book.title}" selesai dibaca — sertifikat bacaan '
+              '(bukti Proof of Reading) sudah tersimpan.',
+          route: '/book/${widget.book.id}',
+          dedupePerDay: false,
+        );
 
     if (mounted) Navigator.pop(context, true);
   }
