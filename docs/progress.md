@@ -23,7 +23,7 @@
 | WF-08 | Blockchain (hash chain) | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-09 | Mini Game | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-10 | Testing | ✅ **Selesai** (angka device: saat demo) | 5 |
-| WF-11 | Laporan & Presentasi | ⬜ Belum | 5 |
+| WF-11 | Laporan & Presentasi | 🟨 **Berjalan** (bahan penjelasan `docs/penjelasan/` siap; laporan/diagram/screenshot menyusul) | 5 |
 
 > **Checklist DoD umum setiap modul** (workflow Bagian 5) — wajib lulus sebelum
 > modul ditandai selesai:
@@ -299,7 +299,7 @@ pubspec.yaml                 +share_plus 13, +crypto 3 (dependensi langsung)
 ## ✅ WF-09 Mini Game (F-13 · SCR-16) — SELESAI (2026-10-17)
 
 ### Checklist WF-09
-- [x] **Kuis literasi 10 soal**: bank lokal 30 soal (tebak penulis/judul/genre, offline) + soal dari koleksi pengguna ("Siapa penulis X di koleksimu?"); ronde & posisi jawaban diacak; timer 15 dtk/soal berbasis timestamp — habis = salah (deskripsi Bagian 5.8).
+- [x] **Kuis literasi 10 soal**: bank lokal 31 soal (tebak penulis/judul/genre, offline) + soal dari koleksi pengguna ("Siapa penulis X di koleksimu?"); ronde & posisi jawaban diacak; timer 15 dtk/soal berbasis timestamp — habis = salah (deskripsi Bagian 5.8).
 - [x] **Skor & koin tersimpan di `game_scores`**: +100 poin & +10 koin per benar; setiap ronde selesai menambah baris; skor tertinggi (`MAX`) & total koin (`SUM`) tampil di kartu segmen Game SCR-04 dan intro SCR-16; koin ikut statistik Profil SCR-09 (sudah `SUM`).
 - [x] **SCR-16** tanpa bottom nav (rute fokus): progress (n/10), timer lingkaran, kartu pertanyaan, 4 pilihan A–D; benar → `success-500`, salah/timeout → `danger500` + tampil jawaban benar; hasil = skor, koin, rekor (+ "Rekor Baru!"), tombol **Main Lagi / Kembali**.
 - [x] Segmen Game SCR-04: kartu "Book Trivia Challenge" + rekor + koin → **Mainkan** → `/game`; shake tetap nonaktif di SCR-16 (hanya aktif di SCR-02/04).
@@ -314,7 +314,7 @@ pubspec.yaml                 +share_plus 13, +crypto 3 (dependensi langsung)
 
 ### File kunci yang dibuat
 ```
-lib/features/game/         question_bank (bank 30 soal + koleksi), quiz_session
+lib/features/game/         question_bank (bank 31 soal + koleksi), quiz_session
                            (mesin skor/feedback), game_screen (SCR-16 penuh)
 lib/core/db/               game_score_repository (save/best/totalCoins/playCount)
 lib/features/explore/      explore_screen (+gameSummaryProvider, kartu rekor & koin)
@@ -340,8 +340,9 @@ test/performance_test.dart   [perf] PBKDF2, 200 buku, buildRound, bootstrap
 docs/workflow_proyek.md      Bagian 6: Status ☑ ×29 + catatan performa
 ```
 
-## ⬜ WF-11 Laporan & Presentasi
+## 🟨 WF-11 Laporan & Presentasi
 
+- [x] **Bahan penjelasan source code** (materi Bagian Implementasi): 12 file di `docs/penjelasan/` (lihat catatan 2026-10-17 di bawah).
 - [ ] Laporan 7 bagian (Cover…Lembar Evaluasi) sesuai deskripsi Bagian 6.
 - [ ] Screenshot semua SCR-01…SCR-17 (Light & Dark) untuk Bab Implementasi.
 - [ ] Diagram: Use Case, ERD, Class Diagram, Flow (dari workflow Bagian 3).
@@ -373,7 +374,7 @@ docs/workflow_proyek.md      Bagian 6: Status ☑ ×29 + catatan performa
 ## 🎮 2026-10-17 — WF-09 Mini Game (Book Trivia) selesai
 
 - **Sesi WF-09 sebelumnya berhenti/error sebelum commit apa pun** (working tree bersih, tidak ada cabang) → dikerjakan ulang penuh di `feature/wf-09-game`.
-- `lib/features/game/`: `question_bank` (30 soal lokal + generator soal koleksi), `quiz_session` (mesin skor/feedback/timeout), `game_screen` (SCR-16 penuh: progress n/10, timer lingkaran 15 dtk, 4 pilihan A–D, benar `success-500` / salah `danger-500` + koreksi, hasil Main Lagi/Kembali).
+- `lib/features/game/`: `question_bank` (31 soal lokal + generator soal koleksi), `quiz_session` (mesin skor/feedback/timeout), `game_screen` (SCR-16 penuh: progress n/10, timer lingkaran 15 dtk, 4 pilihan A–D, benar `success-500` / salah `danger-500` + koreksi, hasil Main Lagi/Kembali).
 - `GameScoreRepository` (`lib/core/db/`): `save` per ronde, `bestScore`, `totalCoins`, `playCount`; skema `game_scores` sudah ada sejak WF-01 — tanpa migrasi.
 - Segmen Game SCR-04 kini menampilkan rekor & koin (`gameSummaryProvider`) → **Mainkan** → `/game`.
 - **Verifikasi:** `dart analyze lib test` bersih · `flutter test` **83/83** (TC-28 + 9 test baru) · `npm test` **26/26**.
@@ -390,3 +391,12 @@ docs/workflow_proyek.md      Bagian 6: Status ☑ ×29 + catatan performa
 - **Verifikasi:** `dart analyze lib test` bersih · `flutter test` **88/88** · `npm test` **26/26**; bug kritis nol.
 - Keputusan **50–51** (metrik host vs device; status TC dari test otomatis).
 - **Berikutnya:** WF-11 Laporan & Presentasi (laporan 7 bagian, screenshot SCR-01…17 Light & Dark, diagram, demo) — **butuh HP fisik**.
+
+---
+
+## 📚 2026-10-17 — WF-11 bahan penjelasan source code (`docs/penjelasan/`) selesai
+
+- **12 file** di `docs/penjelasan/` (cabang `feature/wf-11-laporan`): `00_tech_stack` (teknologi + keputusan K-xx), `01_api_dan_backend` (11 endpoint + pemanggil `file:baris`), `02_arsitektur_alur` (layering `lib/`, 15 rute go_router, alur §4.1–4.8), `10_wf02`…`17_wf09` (**8 file per modul** WF-02…WF-09: alur → tabel file kunci + kutipan komentar `file:baris` → API → test & keputusan), `20_komentar_per_file` (**indeks 145 file**: 103 Dart + 21 test + 21 backend).
+- Sumber: ekstraksi 569 blok komentar `///` (lib/) + komentar `//` backend; **126 rujukan `file:baris` diverifikasi** (0 meleset), link antar-file & path disilang (0 rusak/ hilang).
+- Perbaikan fakta saat cek silang: referensi `library_data.dart:21` (bukan `:32`) dan jumlah bank soal **31** (bukan 30 — `keputusan.md` K-48 & entri WF-09 di file ini ikut diperbarui).
+- **Berikutnya:** laporan 7 bagian, screenshot SCR-01…17 Light & Dark, diagram, demo — **butuh HP fisik**.
