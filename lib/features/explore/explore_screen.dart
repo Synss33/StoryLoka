@@ -2,14 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/db/database_provider.dart';
+import '../../core/db/game_score_repository.dart';
 import '../../core/sensors/shake_discover.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/storyloka_card.dart';
 import '../../core/widgets/top_bar.dart';
+import '../../features/auth/auth_controller.dart';
 import 'converter_panel.dart';
 import 'peta_panel.dart';
+
+/// Data ringkas segmen Game SCR-04: skor tertinggi + total koin (WF-09).
+class GameSummary {
+  const GameSummary({this.bestScore, this.coins = 0, this.playCount = 0});
+
+  final int? bestScore;
+  final int coins;
+  final int playCount;
+}
+
+/// Memuat rekor dari `game_scores` untuk kartu "Book Trivia Challenge".
+final gameSummaryProvider = FutureProvider.autoDispose<GameSummary>((ref) {
+  final userId = ref.watch(authControllerProvider).userId;
+  if (userId == null) return Future<GameSummary>.value(const GameSummary());
+  return ref.watch(databaseProvider.future).then((db) async {
+    if (db == null) return const GameSummary();
+    final repo = GameScoreRepository(db);
+    return GameSummary(
+      bestScore: await repo.bestScore(userId),
+      coins: await repo.totalCoins(userId),
+      playCount: await repo.playCount(userId),
+    );
+  });
+});
 
 /// SCR-04 — Explore: Peta (LBS), Konverter & Game.
 ///
@@ -102,6 +129,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   }
 
   Widget _buildGame(AppPalette p) {
+    // Segmen Game SCR-04: kartu + skor tertinggi + koin → Mainkan (WF-09).
+    final summary = ref.watch(gameSummaryProvider).value ?? const GameSummary();
+
     return StorylokaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,8 +140,30 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           const SizedBox(height: AppSpacing.micro),
           Text(
             'Uji pengetahuan tentang buku-buku populer dalam putaran '
-            'singkat — hadiah poin koleksi.',
+            'singkat — jawaban benar menghasilkan koin.',
             style: AppTypography.body2.copyWith(color: p.neutral500),
+          ),
+          const SizedBox(height: AppSpacing.cardGap),
+          Row(
+            children: [
+              Icon(Icons.emoji_events_outlined, size: 18, color: p.primary600),
+              const SizedBox(width: AppSpacing.micro),
+              Text(
+                summary.bestScore == null
+                    ? 'Belum ada skor'
+                    : 'Rekor ${summary.bestScore}',
+                key: const ValueKey<String>('game-best-score'),
+                style: AppTypography.body2,
+              ),
+              const SizedBox(width: AppSpacing.cardGap),
+              Icon(Icons.monetization_on_outlined, size: 18, color: p.primary600),
+              const SizedBox(width: AppSpacing.micro),
+              Text(
+                '${summary.coins} koin',
+                key: const ValueKey<String>('game-coins'),
+                style: AppTypography.body2,
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.cardGap),
           TextButton.icon(

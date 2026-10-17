@@ -7,7 +7,7 @@ import '../features/auth/auth_screen.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/book_detail/book_detail_screen.dart';
 import '../features/explore/explore_screen.dart';
-import '../features/explore/game_screen.dart';
+import '../features/game/game_screen.dart';
 import '../features/feedback/feedback_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/add_book_screen.dart';

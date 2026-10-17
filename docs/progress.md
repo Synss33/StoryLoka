@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-17 · **Branch aktif:** `develop` (WF-01…WF-07 sudah di-merge @ `1bca365` + build fix `6fd3595`)
+**Terakhir diperbarui:** 2026-10-17 · **Branch aktif:** `feature/wf-09-game` (WF-01…WF-08 sudah di-merge @ `develop`; WF-09 menunggu merge)
 
 ## Status Ringkas
 
@@ -21,7 +21,7 @@
 | WF-06 | Sensor, LBS, Notifikasi | ✅ **Selesai** (sisa screenshot HP) | 3 |
 | WF-07 | AI / LLM (via backend) | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-08 | Blockchain (hash chain) | ✅ **Selesai** (sisa screenshot HP) | 4 |
-| WF-09 | Mini Game | ⬜ Belum | 4 |
+| WF-09 | Mini Game | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-10 | Testing | ⬜ Belum | 5 |
 | WF-11 | Laporan & Presentasi | ⬜ Belum | 5 |
 
@@ -296,11 +296,32 @@ test/                        blockchain_test (unit HashChain, TC-26, TC-27,
 pubspec.yaml                 +share_plus 13, +crypto 3 (dependensi langsung)
 ```
 
-## ⬜ WF-09 Mini Game (F-13 · SCR-16)
+## ✅ WF-09 Mini Game (F-13 · SCR-16) — SELESAI (2026-10-17)
 
-- [ ] Kuis literasi 10 soal (bawaan lokal), timer opsional.
-- [ ] Skor & koin tersimpan di `game_scores`; tampil di SCR-16.
-- [ ] Test: TC-28.
+### Checklist WF-09
+- [x] **Kuis literasi 10 soal**: bank lokal 30 soal (tebak penulis/judul/genre, offline) + soal dari koleksi pengguna ("Siapa penulis X di koleksimu?"); ronde & posisi jawaban diacak; timer 15 dtk/soal berbasis timestamp — habis = salah (deskripsi Bagian 5.8).
+- [x] **Skor & koin tersimpan di `game_scores`**: +100 poin & +10 koin per benar; setiap ronde selesai menambah baris; skor tertinggi (`MAX`) & total koin (`SUM`) tampil di kartu segmen Game SCR-04 dan intro SCR-16; koin ikut statistik Profil SCR-09 (sudah `SUM`).
+- [x] **SCR-16** tanpa bottom nav (rute fokus): progress (n/10), timer lingkaran, kartu pertanyaan, 4 pilihan A–D; benar → `success-500`, salah/timeout → `danger500` + tampil jawaban benar; hasil = skor, koin, rekor (+ "Rekor Baru!"), tombol **Main Lagi / Kembali**.
+- [x] Segmen Game SCR-04: kartu "Book Trivia Challenge" + rekor + koin → **Mainkan** → `/game`; shake tetap nonaktif di SCR-16 (hanya aktif di SCR-02/04).
+- [x] Test: **TC-28 lulus** (+ unit `QuestionBank`/`QuizSession`, timeout, Main Lagi, segmen Game) — `test/game_test.dart` (10 test).
+- [x] `dart analyze lib test` bersih · `flutter test` **83/83** · `npm test` **26/26**.
+- [ ] Screenshot Light & Dark SCR-16 + segmen Game SCR-04 — butuh HP fisik.
+
+### Catatan teknis (rincian di `docs/keputusan.md` 46–49)
+- Skor/koin: 100 poin & 10 koin per benar (keputusan 46); timer timestamp + render periodik 200 ms (47); bank lokal + koleksi dengan opsi generik (48).
+- Haptic di SCR-16 `unawaited(...catchError)` (49) — kanal platform tak merespons di host test, `await` akan menggantung di zona fake-async (pelajaran dari `local_auth` WF-04).
+- `GameScreen` menerima `questionSeconds` & `questionsOverride` untuk test deterministik; test menjawab lewat key `answer-*` dengan pompa frame terbatas (timer periodik → `pumpAndSettle` tidak akan pernah selesai, pola SCR-15).
+
+### File kunci yang dibuat
+```
+lib/features/game/         question_bank (bank 30 soal + koleksi), quiz_session
+                           (mesin skor/feedback), game_screen (SCR-16 penuh)
+lib/core/db/               game_score_repository (save/best/totalCoins/playCount)
+lib/features/explore/      explore_screen (+gameSummaryProvider, kartu rekor & koin)
+lib/app/router.dart        import rute /game → features/game/game_screen.dart
+test/                      game_test (TC-28 + 9 test unit/widget)
+dihapus: lib/features/explore/game_screen.dart (placeholder WF-01)
+```
 
 ## ⬜ WF-10 Testing (semua modul)
 
@@ -334,5 +355,17 @@ pubspec.yaml                 +share_plus 13, +crypto 3 (dependensi langsung)
 - Kartu blockchain menggantikan placeholder di SCR-06: ringkas Blok #n · hash terpotong · tanggal; **Validasi Rantai** → ✅ Valid / ❌ Tidak Valid (blok ke-n); **Bagikan Sertifikat** → dialog pratinjau → PNG (`RepaintBoundary`) → `share_plus`.
 - Tambah dependensi: `share_plus` 13.3.1 + `crypto` 3.0.7 (keputusan **42–45**).
 - **Verifikasi:** `dart analyze lib test` bersih · `flutter test` **73/73** (TC-26, TC-27 + 5 test baru) · `npm test` **26/26**.
-- **Berikutnya:** WF-09 Mini Game (F-13 · SCR-16 — kuis 10 soal, timer, skor & koin di `game_scores`, TC-28).
 - Screenshot kartu blockchain/sertifikat masih menunggu HP fisik (bersama sisa screenshot WF-01…WF-07).
+
+---
+
+## 🎮 2026-10-17 — WF-09 Mini Game (Book Trivia) selesai
+
+- **Sesi WF-09 sebelumnya berhenti/error sebelum commit apa pun** (working tree bersih, tidak ada cabang) → dikerjakan ulang penuh di `feature/wf-09-game`.
+- `lib/features/game/`: `question_bank` (30 soal lokal + generator soal koleksi), `quiz_session` (mesin skor/feedback/timeout), `game_screen` (SCR-16 penuh: progress n/10, timer lingkaran 15 dtk, 4 pilihan A–D, benar `success-500` / salah `danger-500` + koreksi, hasil Main Lagi/Kembali).
+- `GameScoreRepository` (`lib/core/db/`): `save` per ronde, `bestScore`, `totalCoins`, `playCount`; skema `game_scores` sudah ada sejak WF-01 — tanpa migrasi.
+- Segmen Game SCR-04 kini menampilkan rekor & koin (`gameSummaryProvider`) → **Mainkan** → `/game`.
+- **Verifikasi:** `dart analyze lib test` bersih · `flutter test` **83/83** (TC-28 + 9 test baru) · `npm test` **26/26**.
+- Keputusan **46–49** (formula skor/koin, timer timestamp, bank soal, haptic fire-and-forget).
+- **Berikutnya:** WF-10 Testing (TC-01…TC-29, performance, regresi).
+- Screenshot SCR-16 & segmen Game masih menunggu HP fisik (bersama sisa screenshot WF-01…WF-08).
