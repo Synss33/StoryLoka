@@ -171,37 +171,41 @@ storyloka/
 
 | ID | Modul | Skenario | Langkah singkat | Hasil diharapkan | Status |
 |---|---|---|---|---|---|
-| TC-01 | WF-02 | Register valid | Isi data benar → Daftar | Akun dibuat, masuk SCR-02 | ☐ |
-| TC-02 | WF-02 | Password < 8 karakter | Daftar dengan password pendek | Ditolak, pesan validasi | ☐ |
-| TC-03 | WF-02 | Login password salah | Isi password salah | Pesan umum, tidak masuk | ☐ |
-| TC-04 | WF-02 | Password tersimpan ter-hash | Periksa isi DB | Tidak ada teks polos | ☐ |
-| TC-05 | WF-02 | Sesi kedaluwarsa | Ubah expiry → buka app | Dialog sesi berakhir → login | ☐ |
-| TC-06 | WF-02 | Biometrik berhasil | Aktifkan di Profil → buka ulang app | Verifikasi → SCR-02 | ☐ |
-| TC-07 | WF-02 | Biometrik gagal 3× | Gagal 3× | Form password | ☐ |
-| TC-08 | WF-02 | Logout | Slot Logout → Keluar | Token terhapus, ke SCR-01 | ☐ |
-| TC-09 | WF-04 | Bottom nav | Ketuk 5 slot | Beranda/Explore/Profil/Kesan sesuai; Logout memunculkan dialog | ☐ |
-| TC-10 | WF-04 | Ganti foto profil | Kamera/galeri → Simpan | Foto tampil di Profil & Beranda | ☐ |
-| TC-11 | WF-04 | Kesan & saran | Isi → Simpan | Tersimpan lokal dan terkirim | ☐ |
-| TC-12 | WF-05 | Tambah buku | Isi form → Simpan | Muncul di Koleksi | ☐ |
-| TC-13 | WF-05 | Pilih hasil pencarian online | Cari → Pilih | Form terisi otomatis | ☐ |
-| TC-14 | WF-05 | Filter | Genre + rating ≥ 4 + tahun | Hanya hasil sesuai | ☐ |
-| TC-15 | WF-05 | Sesi baca di latar belakang | Mulai → ke home HP 2 menit → kembali | Durasi akurat ±1 dtk | ☐ |
-| TC-16 | WF-05 | Update halaman = total | Simpan sesi | Dialog selesai → ulasan wajib | ☐ |
-| TC-17 | WF-05 | Konversi kurs | 100 USD → IDR | Hasil = 100 × kurs; ada waktu pembaruan | ☐ |
-| TC-18 | WF-05 | Konversi waktu | 14:00 WIB | WITA 15:00, WIT 16:00, London sesuai DST | ☐ |
-| TC-19 | WF-06 | Shake | Kocok HP di Beranda | Buku acak Wishlist + haptic | ☐ |
-| TC-20 | WF-06 | Shake tidak salah picu | Diam / berjalan biasa | Tidak muncul modal | ☐ |
-| TC-21 | WF-06 | Auto-theme | Tutup sensor cahaya (Android) | Dark Mode setelah ≥ 2 dtk | ☐ |
-| TC-22 | WF-06 | LBS izin ditolak | Tolak izin lokasi | Kartu ajakan + Buka Pengaturan | ☐ |
-| TC-23 | WF-06 | Notifikasi pengingat | Set jam +1 menit | Notifikasi muncul, tercatat di SCR-14 | ☐ |
-| TC-24 | WF-07 | Ringkasan AI | Ringkas dengan AI | Ringkasan + label “Dihasilkan AI” | ☐ |
-| TC-25 | WF-07 | AI offline | Matikan internet | Input dinonaktifkan / pesan + Coba Lagi | ☐ |
-| TC-26 | WF-08 | Blok baru | Tandai buku selesai | Blok dibuat, validasi Valid | ☐ |
-| TC-27 | WF-08 | Tamper | Ubah data blok manual | Validasi Tidak Valid (menunjuk blok) | ☐ |
-| TC-28 | WF-09 | Kuis | Selesaikan 10 soal | Skor & koin tersimpan | ☐ |
-| TC-29 | WF-03 | Offline lalu sinkron | Tambah buku offline → online | Data terkirim ke server | ☐ |
+| TC-01 | WF-02 | Register valid | Isi data benar → Daftar | Akun dibuat, masuk SCR-02 | ☑ |
+| TC-02 | WF-02 | Password < 8 karakter | Daftar dengan password pendek | Ditolak, pesan validasi | ☑ |
+| TC-03 | WF-02 | Login password salah | Isi password salah | Pesan umum, tidak masuk | ☑ |
+| TC-04 | WF-02 | Password tersimpan ter-hash | Periksa isi DB | Tidak ada teks polos | ☑ |
+| TC-05 | WF-02 | Sesi kedaluwarsa | Ubah expiry → buka app | Dialog sesi berakhir → login | ☑ |
+| TC-06 | WF-02 | Biometrik berhasil | Aktifkan di Profil → buka ulang app | Verifikasi → SCR-02 | ☑ |
+| TC-07 | WF-02 | Biometrik gagal 3× | Gagal 3× | Form password | ☑ |
+| TC-08 | WF-02 | Logout | Slot Logout → Keluar | Token terhapus, ke SCR-01 | ☑ |
+| TC-09 | WF-04 | Bottom nav | Ketuk 5 slot | Beranda/Explore/Profil/Kesan sesuai; Logout memunculkan dialog | ☑ |
+| TC-10 | WF-04 | Ganti foto profil | Kamera/galeri → Simpan | Foto tampil di Profil & Beranda | ☑ |
+| TC-11 | WF-04 | Kesan & saran | Isi → Simpan | Tersimpan lokal dan terkirim | ☑ |
+| TC-12 | WF-05 | Tambah buku | Isi form → Simpan | Muncul di Koleksi | ☑ |
+| TC-13 | WF-05 | Pilih hasil pencarian online | Cari → Pilih | Form terisi otomatis | ☑ |
+| TC-14 | WF-05 | Filter | Genre + rating ≥ 4 + tahun | Hanya hasil sesuai | ☑ |
+| TC-15 | WF-05 | Sesi baca di latar belakang | Mulai → ke home HP 2 menit → kembali | Durasi akurat ±1 dtk | ☑ |
+| TC-16 | WF-05 | Update halaman = total | Simpan sesi | Dialog selesai → ulasan wajib | ☑ |
+| TC-17 | WF-05 | Konversi kurs | 100 USD → IDR | Hasil = 100 × kurs; ada waktu pembaruan | ☑ |
+| TC-18 | WF-05 | Konversi waktu | 14:00 WIB | WITA 15:00, WIT 16:00, London sesuai DST | ☑ |
+| TC-19 | WF-06 | Shake | Kocok HP di Beranda | Buku acak Wishlist + haptic | ☑ |
+| TC-20 | WF-06 | Shake tidak salah picu | Diam / berjalan biasa | Tidak muncul modal | ☑ |
+| TC-21 | WF-06 | Auto-theme | Tutup sensor cahaya (Android) | Dark Mode setelah ≥ 2 dtk | ☑ |
+| TC-22 | WF-06 | LBS izin ditolak | Tolak izin lokasi | Kartu ajakan + Buka Pengaturan | ☑ |
+| TC-23 | WF-06 | Notifikasi pengingat | Set jam +1 menit | Notifikasi muncul, tercatat di SCR-14 | ☑ |
+| TC-24 | WF-07 | Ringkasan AI | Ringkas dengan AI | Ringkasan + label “Dihasilkan AI” | ☑ |
+| TC-25 | WF-07 | AI offline | Matikan internet | Input dinonaktifkan / pesan + Coba Lagi | ☑ |
+| TC-26 | WF-08 | Blok baru | Tandai buku selesai | Blok dibuat, validasi Valid | ☑ |
+| TC-27 | WF-08 | Tamper | Ubah data blok manual | Validasi Tidak Valid (menunjuk blok) | ☑ |
+| TC-28 | WF-09 | Kuis | Selesaikan 10 soal | Skor & koin tersimpan | ☑ |
+| TC-29 | WF-03 | Offline lalu sinkron | Tambah buku offline → online | Data terkirim ke server | ☑ |
 
 **Performance testing:** waktu start aplikasi, waktu muat 200 buku, waktu respons AI, pemakaian memori (catat di tabel laporan).
+
+> **Status TC (WF-10, 2026-10-17):** seluruh TC-01…TC-29 **lulus lewat test otomatis** (`flutter test` 88 test; nama test memuat ID TC). TC yang membutuhkan sensor/perangkat (TC-06/07 biometrik, TC-19/20 shake, TC-21 sensor cahaya, TC-22 izin GPS, TC-23 notifikasi, TC-15 latar belakang) diverifikasi lewat abstraksi/seam yang disimulasikan di test; **verifikasi manual di HP Realme C2** dilakukan saat demo akhir.
+>
+> **Angka performance (host Windows — `test/performance_test.dart`):** PBKDF2 hash+verify 210k ≈ 11,9 dtk · insert 1 buku 95 ms · query 200 buku 45 ms · filter genre 6 ms · buildRound 56 ms · splash → Beranda 6,9 dtk. **Di HP (diukur manual):** waktu start, respons AI, pemakaian memori — diisi saat demo.
 
 ---
 

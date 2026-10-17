@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-17 · **Branch aktif:** `feature/wf-09-game` (WF-01…WF-08 sudah di-merge @ `develop`; WF-09 menunggu merge)
+**Terakhir diperbarui:** 2026-10-17 · **Branch aktif:** `feature/wf-10-testing` (WF-01…WF-09 sudah di-merge @ `develop`)
 
 ## Status Ringkas
 
@@ -22,7 +22,7 @@
 | WF-07 | AI / LLM (via backend) | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-08 | Blockchain (hash chain) | ✅ **Selesai** (sisa screenshot HP) | 4 |
 | WF-09 | Mini Game | ✅ **Selesai** (sisa screenshot HP) | 4 |
-| WF-10 | Testing | ⬜ Belum | 5 |
+| WF-10 | Testing | ✅ **Selesai** (angka device: saat demo) | 5 |
 | WF-11 | Laporan & Presentasi | ⬜ Belum | 5 |
 
 > **Checklist DoD umum setiap modul** (workflow Bagian 5) — wajib lulus sebelum
@@ -323,11 +323,22 @@ test/                      game_test (TC-28 + 9 test unit/widget)
 dihapus: lib/features/explore/game_screen.dart (placeholder WF-01)
 ```
 
-## ⬜ WF-10 Testing (semua modul)
+## ✅ WF-10 Testing (semua modul) — SELESAI (2026-10-17)
 
-- [ ] Jalankan seluruh TC-01…TC-29, isi kolom Status di workflow Bagian 6.
-- [ ] Performance: waktu start, muat 200 buku, respons AI, memori — dicatat.
-- [ ] Regresi: `flutter analyze`, `flutter test`, `npm test` tetap hijau; bug kritis nol.
+- [x] Jalankan seluruh **TC-01…TC-29 → semua LULUS** (kolom Status Bagian 6 di `workflow_proyek.md` sudah diisi ☑); setiap TC punya test otomatis bernama mengandung ID TC-nya.
+- [x] Performance (host, `test/performance_test.dart`): PBKDF2 210k hash+verify ≈ **11,9 dtk** · insert 1 buku **95 ms** · query 200 buku **45 ms** · filter genre **6 ms** · buildRound **56 ms** · splash → Beranda **6,9 dtk**.
+- [x] Regresi: `dart analyze lib test` bersih · `flutter test` **88/88** · `npm test` **26/26** — bug kritis nol.
+- [ ] Angka device (waktu start di HP, respons AI, pemakaian memori) diukur & dicatat saat demo/screenshot (butuh HP + backend jaringan).
+
+### Catatan teknis (keputusan 50–51)
+- Performance diukur sebagai test host biasa (Stopwatch + `print` `[perf]`), **bukan** integration_test/device; seed 200 buku via **satu transaksi** karena insert baris-demi-baris autocommit lambat (23 dtk/200 — bukan alur nyata app). (keputusan 50)
+- Status TC ditandai dari test otomatis; TC sensor (biometrik/shake/cahaya/GPS/notifikasi) lulus via seam simulasi — verifikasi manual HP saat demo. (keputusan 51)
+
+### File kunci yang dibuat
+```
+test/performance_test.dart   [perf] PBKDF2, 200 buku, buildRound, bootstrap
+docs/workflow_proyek.md      Bagian 6: Status ☑ ×29 + catatan performa
+```
 
 ## ⬜ WF-11 Laporan & Presentasi
 
@@ -369,3 +380,13 @@ dihapus: lib/features/explore/game_screen.dart (placeholder WF-01)
 - Keputusan **46–49** (formula skor/koin, timer timestamp, bank soal, haptic fire-and-forget).
 - **Berikutnya:** WF-10 Testing (TC-01…TC-29, performance, regresi).
 - Screenshot SCR-16 & segmen Game masih menunggu HP fisik (bersama sisa screenshot WF-01…WF-08).
+
+---
+
+## 🧪 2026-10-17 — WF-10 Testing selesai
+
+- **TC-01…TC-29 semua lulus** (88 test Flutter — tiap TC punya test bernama ID TC) + **26** backend; kolom Status Bagian 6 `workflow_proyek.md` diisi ☑ + catatan verifikasi manual HP.
+- **Performance host** (`test/performance_test.dart`, keputusan **50**): PBKDF2 210k hash+verify 11,9 dtk · insert 1 buku 95 ms · query 200 buku 45 ms · filter 6 ms · buildRound 56 ms · splash→Beranda 6,9 dtk.
+- **Verifikasi:** `dart analyze lib test` bersih · `flutter test` **88/88** · `npm test` **26/26**; bug kritis nol.
+- Keputusan **50–51** (metrik host vs device; status TC dari test otomatis).
+- **Berikutnya:** WF-11 Laporan & Presentasi (laporan 7 bagian, screenshot SCR-01…17 Light & Dark, diagram, demo) — **butuh HP fisik**.
