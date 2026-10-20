@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/db/database_provider.dart';
 import '../../core/db/settings_repository.dart';
 import '../../core/network/api_client.dart';
 import 'biometric_service.dart';
+import 'demo_seed.dart';
 import 'session_service.dart';
 import 'user_repository.dart';
 
@@ -160,6 +162,36 @@ class AuthController extends Notifier<AuthState> {
       }
     } finally {
       state = const AuthState();
+    }
+  }
+
+  /// Masuk sebagai akun demo berisi data contoh (khusus build `DEMO_MODE`).
+  /// Membuat + menyemai data bila belum ada, lalu membuka sesi lokal.
+  Future<String?> loginDemo() async {
+    if (state.busy) return null;
+    state = state.copyWith(busy: true);
+    try {
+      final db = await ref.read(databaseProvider.future);
+      if (db == null) {
+        return _fail('Database tidak tersedia di perangkat ini.');
+      }
+      final userId = await DemoSeeder(db).ensure();
+      await ref.read(sessionServiceProvider).start(userId);
+
+      // Salin akun demo ke server bila online (best-effort, seperti register).
+      unawaitedServer(
+        path: '/auth/register',
+        body: <String, Object?>{
+          'name': DemoSeeder.name,
+          'email': DemoSeeder.email,
+          'password': DemoSeeder.password,
+        },
+      );
+
+      state = AuthState(userId: userId);
+      return null;
+    } catch (_) {
+      return _fail('Gagal menyiapkan akun demo. Coba lagi.');
     }
   }
 

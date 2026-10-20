@@ -400,3 +400,14 @@ docs/workflow_proyek.md      Bagian 6: Status ☑ ×29 + catatan performa
 - Sumber: ekstraksi 569 blok komentar `///` (lib/) + komentar `//` backend; **126 rujukan `file:baris` diverifikasi** (0 meleset), link antar-file & path disilang (0 rusak/ hilang).
 - Perbaikan fakta saat cek silang: referensi `library_data.dart:21` (bukan `:32`) dan jumlah bank soal **31** (bukan 30 — `keputusan.md` K-48 & entri WF-09 di file ini ikut diperbarui).
 - **Berikutnya:** laporan 7 bagian, screenshot SCR-01…17 Light & Dark, diagram, demo — **butuh HP fisik**.
+
+---
+
+## 🎯 2026-10-20 — Mode demo (akun berisi data) + instal APK ke HP
+
+- **Mode demo** (keputusan **52**): `--dart-define=DEMO_MODE=true` menampilkan tombol **"Masuk Demo (data contoh)"** di SCR-01 → `DemoSeeder` (`lib/features/auth/demo_seed.dart`, via `AuthController.loginDemo`) membuat akun **demo@storyloka.app / Demo1234!** lalu menanam data contoh: **11 buku** (5 selesai, 2 sedang dibaca, 2 wishlist, 2 belum dibaca; 2 selesai bulan ini → target bulanan 4 sebagian), **sesi baca 6 hari berturut** (streak), catatan & kutipan, **5 ulasan + rantai blok SHA-256 valid** (genesis → 5 blok), pengaturan pengingat 20:00, kesan & saran contoh, **3 ronde skor game** (rekor 1000 / 245 koin), 2 riwayat notifikasi. **Idempoten** — buka lagi tidak menggandakan data; build biasa tanpa flag tidak memakai tombol ini.
+- **Verifikasi:** `flutter analyze` bersih · `flutter test` **91/91** (3 test baru `test/demo_seed_test.dart`: kelengkapan, idempoten, validitas rantai).
+- **APK release arm64** (35,8 MB) dibuat dengan `--dart-define=DEMO_MODE=true --dart-define=API_BASE_URL=http://192.168.1.71:3000` (keputusan **53**) → **terpasang di HP Realme C2** via `adb install -r` (23:09) dan diluncurkan — proses `com.storyloka.storyloka` berjalan, logcat tanpa crash.
+- Backend `node src/server.js` jalan di PC; **HP berhasil mengakses** `http://192.168.1.71:3000/health` (curl dari device sukses — akses jaringan HP→PC tidak lagi terblokir, berbeda catatan 2026-10-16).
+- **Belum diverifikasi visual:** screenshot `screencap` hitam karena layar kunci HP (PIN/pola pengguna); verifikasi UI via `uiautomator dump` hanya sampai jendela aplikasi. **Langkah manual:** buka HP → SCR-01 → tap **"Masuk Demo (data contoh)"** → Beranda/koleksi terisi.
+- Screenshot Light & Dark SCR-01…17 (WF-11) tetap menunggu HP terbuka.

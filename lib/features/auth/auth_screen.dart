@@ -27,6 +27,10 @@ class AuthScreen extends ConsumerStatefulWidget {
 
 enum _AuthMode { login, register }
 
+/// Build flag: tombol "Masuk Demo" hanya tampil pada build demo
+/// (`--dart-define=DEMO_MODE=true`) — build biasa tidak memakainya.
+const bool _demoModeEnabled = bool.fromEnvironment('DEMO_MODE');
+
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifierCtrl = TextEditingController(); // login
@@ -114,6 +118,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     if (error == null && mounted) context.go('/');
   }
 
+  /// Masuk sebagai akun demo berisi data contoh (build DEMO_MODE saja).
+  Future<void> _loginDemo() async {
+    final error = await ref.read(authControllerProvider.notifier).loginDemo();
+    if (error == null && mounted) context.go('/');
+  }
+
   Future<void> _biometricLogin() async {
     final controller = ref.read(authControllerProvider.notifier);
     final session = await ref.read(authStoreProvider).readSession();
@@ -168,6 +178,23 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     onSubmit: _submit,
                     onBiometric: _biometricAvailable ? _biometricLogin : null,
                   ),
+                  if (_demoModeEnabled) ...[
+                    const SizedBox(height: AppSpacing.cardGap),
+                    SecondaryButton(
+                      key: const Key('auth-demo'),
+                      label: 'Masuk Demo (data contoh)',
+                      icon: Icons.auto_awesome,
+                      loading: auth.busy,
+                      onPressed: _loginDemo,
+                    ),
+                    const SizedBox(height: AppSpacing.micro),
+                    Text(
+                      'Akun demo@storyloka.app — data hanya contoh, aman dihapus '
+                      'lewat logout/hapus aplikasi.',
+                      style: AppTypography.caption.copyWith(color: p.neutral500),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ],
               ),
             ),
