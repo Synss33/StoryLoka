@@ -1,0 +1,33 @@
+group 'com.vodemn.light_sensor'
+version '1.0'
+
+// VENDOR FIX (lihat docs/keputusan.md): jcenter() dihapus pada Gradle 9,
+// jadi diganti mavenCentral() dan AGP/minSdk disamakan dengan proyek.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:9.1.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 36
+    namespace 'com.vodemn.light_sensor'
+
+    defaultConfig {
+        minSdkVersion 21
+    }
+}
