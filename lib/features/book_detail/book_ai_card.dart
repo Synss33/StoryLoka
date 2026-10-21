@@ -60,15 +60,15 @@ class _BookAiCardState extends ConsumerState<BookAiCard> {
       }
     }
 
-    // 2. Panggil proxy AI (token sesi; API key tetap di server).
-    final session = await ref.read(authStoreProvider).readSession();
+    // 2. Panggil proxy AI (token sesi server; API key tetap di server).
+    final token = await onlineTokenOf(ref.read(authStoreProvider));
     final notes = detail.notes.take(5).map((n) => n.content).toList();
     final result = await ref.read(aiServiceProvider).summarize(
           title: detail.book.title,
           author: detail.book.author,
           synopsis: detail.book.synopsis,
           notes: notes,
-          token: session?.token,
+          token: token,
         );
     if (!mounted) return;
 

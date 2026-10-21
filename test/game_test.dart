@@ -198,6 +198,36 @@ void main() {
       }
     });
 
+    test('posisi opsi diacak — jawaban benar tidak selalu pilihan A', () {
+      // Seluruh soal bank lokal didefinisikan correctIndex:0; buildRound
+      // wajib mengacak opsi agar pemain tidak menebak A terus (perbaikan).
+      for (final seed in <int>[1, 7, 42, 99]) {
+        final round = QuestionBank.buildRound(
+          books: const <Book>[],
+          random: Random(seed),
+        );
+        for (final q in round) {
+          final original = QuestionBank.local.firstWhere(
+            (o) => o.prompt == q.prompt,
+            orElse: () => q,
+          );
+          // Teks jawaban benar identik dengan bank; hanya urutan berubah.
+          expect(q.options[q.correctIndex],
+              original.options[original.correctIndex]);
+          expect(q.options.toSet(), original.options.toSet());
+        }
+      }
+
+      final round = QuestionBank.buildRound(
+        books: const <Book>[],
+        random: Random(42),
+      );
+      final nonZero =
+          round.where((q) => q.correctIndex != 0).length;
+      expect(nonZero, greaterThan(0),
+          reason: 'minimal ada soal dengan jawaban benar bukan di A');
+    });
+
     test('soal koleksi dibuat bila ada ≥ 2 buku berpenulis berbeda', () {
       final now = DateTime.now().millisecondsSinceEpoch;
       final books = <Book>[

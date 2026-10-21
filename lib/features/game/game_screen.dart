@@ -16,6 +16,8 @@ import '../../core/widgets/buttons.dart';
 import '../../core/widgets/storyloka_card.dart';
 import '../../core/widgets/top_bar.dart';
 import '../../features/auth/auth_controller.dart';
+import '../explore/explore_screen.dart';
+import '../profile/profile_stats.dart';
 import 'question_bank.dart';
 import 'quiz_session.dart';
 
@@ -193,6 +195,13 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
     final best = await repo.bestScore(userId);
     final total = await repo.totalCoins(userId);
+
+    // Segmen Game (Explore) & statistik Profil memakai provider autoDispose
+    // yang tetap hidup di balik layar ini (shell IndexedStack) — invalidasi
+    // agar rekor/koin langsung naik tanpa harus keluar aplikasi.
+    ref.invalidate(gameSummaryProvider);
+    ref.invalidate(profileStatsProvider);
+
     if (!mounted) return;
     setState(() {
       _lastScore = score;

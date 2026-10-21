@@ -57,6 +57,15 @@ flutter run --dart-define=API_BASE_URL=http://192.168.1.5:3000
 Status koneksi backend tampil di SCR-02 (Beranda) — bila `Backend terjangkau`
 muncul, aplikasi sudah tersambung ke backend.
 
+**Mode online (perangkat lain / produksi):** alamat backend disetel di
+**satu file** — `lib/core/config/app_config.dart` (keputusan 54). Ganti
+`AppConfig.apiBaseUrl` ke backend Anda (atau build dengan
+`--dart-define=API_BASE_URL=…`); clone → build biasa langsung memakai nilai
+itu. Fitur online (kurs, AI, kesan & saran) memakai **token sesi server**
+yang tersimpan otomatis saat login/registrasi; tanpa backend aplikasi tetap
+berfungsi offline penuh. AI aktif bila `GEMINI_API_KEY` diisi di
+`backend/.env` — selain itu balasan "Layanan AI belum tersedia".
+
 ## 🗂️ Struktur Dokumen
 ```
 README.md                     <- pintu masuk (Anda di sini)

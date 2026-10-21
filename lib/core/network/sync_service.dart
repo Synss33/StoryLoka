@@ -102,7 +102,7 @@ class SyncService {
       final response = await _client.postJson(
         '/sync',
         body: payload,
-        token: session.token,
+        token: await onlineTokenOf(_store),
       );
       if (response.offline || !response.ok) return false;
 

@@ -291,12 +291,27 @@ abstract final class QuestionBank {
     final rng = random ?? Random();
     final pool = <TriviaQuestion>[...local, ...collectionQuestions(books, rng)];
     pool.shuffle(rng);
-    final round = pool.take(roundSize).toList();
+    final round =
+        pool.take(roundSize).map((q) => _shuffledOptions(q, rng)).toList();
     // Pastikan selalu penuh walau pool < 10 (koleksi sangat kecil).
     while (round.length < roundSize && pool.isNotEmpty) {
-      round.add(pool[round.length % pool.length]);
+      round.add(_shuffledOptions(pool[round.length % pool.length], rng));
     }
     return round;
+  }
+
+  /// Mengacak posisi opsi dan menghitung ulang [TriviaQuestion.correctIndex]
+  /// agar jawaban benar tidak selalu di pilihan A — seluruh soal bank lokal
+  /// didefinisikan dengan `correctIndex: 0`.
+  static TriviaQuestion _shuffledOptions(TriviaQuestion q, Random rng) {
+    final correctText = q.options[q.correctIndex];
+    final options = <String>[...q.options]..shuffle(rng);
+    return TriviaQuestion(
+      prompt: q.prompt,
+      options: options,
+      correctIndex: options.indexOf(correctText),
+      category: q.category,
+    );
   }
 
   /// Soal dari koleksi pengguna: tebak penulis dari buku miliknya.

@@ -66,11 +66,13 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen> {
 
   /// Cek koneksi, muat token, dan (bila dibuka dari SCR-06) konteks buku.
   Future<void> _init() async {
-    final session = await ref.read(authStoreProvider).readSession();
+    final store = ref.read(authStoreProvider);
+    final session = await store.readSession();
+    final token = await onlineTokenOf(store);
     final health = await ref.read(apiClientProvider).getHealth();
     if (!mounted) return;
     setState(() {
-      _token = session?.token;
+      _token = token;
       _userId = session?.userId;
       _online = health.ok;
     });

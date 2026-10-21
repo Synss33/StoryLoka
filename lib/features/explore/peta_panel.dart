@@ -25,13 +25,30 @@ class PetaPanel extends ConsumerStatefulWidget {
   ConsumerState<PetaPanel> createState() => _PetaPanelState();
 }
 
-enum _PetaView { checking, gpsOff, denied, deniedForever, loading, ready, error }
+enum _PetaView {
+  checking,
+  gpsOff,
+  denied,
+  deniedForever,
+  loading,
+  ready,
+
+  /// Posisi perangkat tidak bisa ditentukan (GPS belum lock / timeout).
+  gpsError,
+
+  /// Data tempat gagal dimuat (Overpass & cache tidak tersedia).
+  error,
+}
 
 class _PetaPanelState extends ConsumerState<PetaPanel> {
   _PetaView _view = _PetaView.checking;
   bool _busy = false;
   LatLng? _here;
   List<BookPlace> _places = const <BookPlace>[];
+
+  /// Hasil dari cache lokal (semua endpoint gagal) → label "data offline".
+  bool _fromCache = false;
+  int? _cacheSavedAtMs;
 
   @override
   void initState() {
@@ -95,6 +112,9 @@ class _PetaPanelState extends ConsumerState<PetaPanel> {
   }
 
   /// Mengambil posisi lalu tempat terdekat (radius 3 km).
+  ///
+  /// Kegagalan dipisah agar pesan jelas: GPS gagal → [ _PetaView.gpsError ],
+  /// data gagal → [ _PetaView.error ] (SCR-04 / workflow 5.10).
   Future<void> _loadPlaces() async {
     setState(() {
       _view = _PetaView.loading;
@@ -102,17 +122,30 @@ class _PetaPanelState extends ConsumerState<PetaPanel> {
     });
     final location = ref.read(locationServiceProvider);
     final places = ref.read(bookPlaceServiceProvider);
+
+    LatLng here;
     try {
-      final here = await location.getCurrentPosition();
+      here = await location
+          .getCurrentPosition()
+          .timeout(const Duration(seconds: 20));
+    } catch (_) {
+      // Sinyal GPS belum terkunci / timeout → bukan masalah data.
+      if (mounted) setState(() => _view = _PetaView.gpsError);
+      return;
+    }
+
+    try {
       final found = await places.nearby(here);
       if (!mounted) return;
       setState(() {
         _here = here;
-        _places = found;
+        _places = found.places;
+        _fromCache = found.fromCache;
+        _cacheSavedAtMs = found.savedAtMs;
         _view = _PetaView.ready;
       });
     } catch (_) {
-      // Offline / Overpass gagal → state error (SCR-13).
+      // Overpass & cache gagal → state error (SCR-13).
       if (mounted) setState(() => _view = _PetaView.error);
     }
   }
@@ -216,20 +249,49 @@ class _PetaPanelState extends ConsumerState<PetaPanel> {
             ],
           ),
         ),
-      _PetaView.error => StorylokaCard(
+      _PetaView.gpsError => StorylokaCard(
+          key: const ValueKey<String>('gps-error-card'),
           child: Column(
             children: [
-              Icon(Icons.cloud_off_outlined, size: 40, color: p.danger500),
+              Icon(Icons.gps_off_outlined, size: 40, color: p.danger500),
               const SizedBox(height: AppSpacing.cardGap),
               Text(
-                'Gagal Memuat Peta',
+                'Lokasi Tidak Dapat Ditentukan',
                 style: AppTypography.h3,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.micro),
               Text(
-                'Koneksi terputus — periksa jaringan lalu coba lagi. '
-                'Fitur lokal tetap berfungsi.',
+                'Sinyal GPS belum ditemukan — coba di ruang terbuka atau '
+                'dekat jendela, lalu muat ulang.',
+                style: AppTypography.body2.copyWith(color: p.neutral500),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.cardGap),
+              PrimaryButton(
+                key: const ValueKey<String>('retry-location'),
+                label: 'Coba Lagi',
+                onPressed: _locate,
+              ),
+            ],
+          ),
+        ),
+      _PetaView.error => StorylokaCard(
+          key: const ValueKey<String>('places-error-card'),
+          child: Column(
+            children: [
+              Icon(Icons.cloud_off_outlined, size: 40, color: p.danger500),
+              const SizedBox(height: AppSpacing.cardGap),
+              Text(
+                'Gagal Memuat Tempat',
+                style: AppTypography.h3,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.micro),
+              Text(
+                'Data toko buku/perpustakaan tidak dapat diambil — periksa '
+                'koneksi internet lalu coba lagi. Fitur lokal tetap '
+                'berfungsi.',
                 style: AppTypography.body2.copyWith(color: p.neutral500),
                 textAlign: TextAlign.center,
               ),
@@ -293,6 +355,7 @@ class _PetaPanelState extends ConsumerState<PetaPanel> {
           ),
         ),
         const SizedBox(height: AppSpacing.cardGap),
+        if (_fromCache) _OfflineBanner(savedAtMs: _cacheSavedAtMs),
         if (_places.isEmpty)
           Text(
             'Belum ada toko buku/perpustakaan dalam radius 3 km.',
@@ -312,6 +375,41 @@ class _PetaPanelState extends ConsumerState<PetaPanel> {
           ],
         const SizedBox(height: AppSpacing.cardGap),
       ],
+    );
+  }
+}
+
+/// Label "data offline" bila daftar berasal dari cache (endpoint gagal).
+class _OfflineBanner extends StatelessWidget {
+  const _OfflineBanner({this.savedAtMs});
+
+  final int? savedAtMs;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = AppColors.of(context);
+    String when = '';
+    final savedAt = savedAtMs;
+    if (savedAt != null) {
+      final t = DateTime.fromMillisecondsSinceEpoch(savedAt);
+      when = ' — terakhir diperbarui '
+          '${t.day}/${t.month} ${t.hour.toString().padLeft(2, '0')}:'
+          '${t.minute.toString().padLeft(2, '0')}';
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.cardGap),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_off_outlined, size: 16, color: p.neutral500),
+          const SizedBox(width: AppSpacing.micro),
+          Expanded(
+            child: Text(
+              'Menampilkan data offline$when.',
+              style: AppTypography.caption.copyWith(color: p.neutral500),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -39,11 +39,9 @@ class RatesService {
   }
 }
 
-/// Mengambil token sesi berjalan untuk panggilan `/rates` (requireAuth).
-Future<String?> _currentToken(Ref ref) async {
-  final session = await ref.read(authStoreProvider).readSession();
-  return session?.token;
-}
+/// Token sesi untuk panggilan `/rates` (requireAuth): token server dulu,
+/// cadangan token lokal (offline / test host).
+Future<String?> _currentToken(Ref ref) => onlineToken(ref);
 
 /// Provider repository cache kurs (null bila DB belum terbuka).
 final ratesServiceProvider = FutureProvider<RatesService?>((ref) async {

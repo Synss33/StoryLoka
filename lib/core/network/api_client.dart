@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
+import '../config/app_config.dart';
+
 /// Hasil pemeriksaan endpoint `GET /health`.
 class HealthStatus {
   const HealthStatus({required this.ok, required this.message});
@@ -27,11 +29,9 @@ class ApiClient {
       : _client = client ?? http.Client(),
         baseUrl = baseUrl ?? defaultBaseUrl;
 
-  /// Nilai bawaan: loopback host dari emulator Android ke mesin lokal.
-  static const String defaultBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000',
-  );
+  /// Nilai bawaan: loopback host dari emulator Android ke mesin lokal —
+  /// ubah di satu tempat: `lib/core/config/app_config.dart`.
+  static const String defaultBaseUrl = AppConfig.apiBaseUrl;
 
   final String baseUrl;
   final http.Client _client;

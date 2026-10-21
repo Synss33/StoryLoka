@@ -11,7 +11,7 @@ import '../../core/widgets/buttons.dart';
 import '../../core/widgets/storyloka_card.dart';
 import '../../core/widgets/top_bar.dart';
 import '../auth/auth_controller.dart';
-import '../auth/session_service.dart';
+import '../auth/auth_store.dart';
 
 /// SCR-10 — Saran & Kesan Mata Kuliah Pemrograman Aplikasi Mobile (F-08).
 ///
@@ -53,7 +53,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
       // dari web service (GET /feedback) — F-08 online.
       if (existing == null) {
         final token =
-            (await ref.read(sessionServiceProvider).rawSession())?.token;
+            await onlineTokenOf(ref.read(authStoreProvider));
         final response =
             await ref.read(apiClientProvider).tryGetJson('/feedback',
                 token: token);
@@ -122,7 +122,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
       await repo?.save(item);
 
       // 2) Kirim ke web service (gagal = tetap antre untuk /sync).
-      final token = (await ref.read(sessionServiceProvider).rawSession())?.token;
+      final token = await onlineTokenOf(ref.read(authStoreProvider));
       final sent = await ref.read(apiClientProvider).tryPostJson(
             '/feedback',
             body: item.toJson()..remove('id')..remove('user_id'),

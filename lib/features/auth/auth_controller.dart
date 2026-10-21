@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/db/database_provider.dart';
 import '../../core/db/settings_repository.dart';
 import '../../core/network/api_client.dart';
+import 'auth_store.dart';
 import 'biometric_service.dart';
 import 'demo_seed.dart';
 import 'session_service.dart';
@@ -89,14 +92,17 @@ class AuthController extends Notifier<AuthState> {
       );
       await ref.read(sessionServiceProvider).start(user.id);
 
-      // Sinkron ke server saat online — hasil tidak menentukan keberhasilan.
-      unawaitedServer(
-        path: '/auth/register',
-        body: <String, Object?>{
-          'name': user.name,
-          'email': user.email,
-          'password': password,
-        },
+      // Sinkron ke server saat online — hasil tidak menentukan keberhasilan;
+      // token balasan disimpan agar endpoint butuh-otorisasi diterima.
+      unawaited(
+        _serverAuth(
+          path: '/auth/register',
+          body: <String, Object?>{
+            'name': user.name,
+            'email': user.email,
+            'password': password,
+          },
+        ),
       );
 
       state = AuthState(userId: user.id);
@@ -130,11 +136,12 @@ class AuthController extends Notifier<AuthState> {
         return _fail('Email atau password salah.');
       }
 
-      final session = await ref.read(sessionServiceProvider).start(user.id);
-      unawaitedServer(
-        path: '/auth/login',
-        body: <String, Object?>{'email': user.email, 'password': password},
-        token: session.token,
+      await ref.read(sessionServiceProvider).start(user.id);
+      unawaited(
+        _serverAuth(
+          path: '/auth/login',
+          body: <String, Object?>{'email': user.email, 'password': password},
+        ),
       );
 
       state = AuthState(userId: user.id);
@@ -157,8 +164,11 @@ class AuthController extends Notifier<AuthState> {
       final session = await ref.read(sessionServiceProvider).rawSession();
       await ref.read(sessionServiceProvider).end();
       // Cabut sesi di server juga (bila online) — tidak mengubah hasil lokal.
-      if (session != null) {
-        unawaitedServer(path: '/auth/logout', token: session.token);
+      final serverToken = await ref.read(authStoreProvider).readServerToken();
+      await ref.read(authStoreProvider).clearServerToken();
+      final token = serverToken ?? session?.token;
+      if (token != null) {
+        unawaitedServer(path: '/auth/logout', token: token);
       }
     } finally {
       state = const AuthState();
@@ -179,13 +189,15 @@ class AuthController extends Notifier<AuthState> {
       await ref.read(sessionServiceProvider).start(userId);
 
       // Salin akun demo ke server bila online (best-effort, seperti register).
-      unawaitedServer(
-        path: '/auth/register',
-        body: <String, Object?>{
-          'name': DemoSeeder.name,
-          'email': DemoSeeder.email,
-          'password': DemoSeeder.password,
-        },
+      unawaited(
+        _serverAuth(
+          path: '/auth/register',
+          body: <String, Object?>{
+            'name': DemoSeeder.name,
+            'email': DemoSeeder.email,
+            'password': DemoSeeder.password,
+          },
+        ),
       );
 
       state = AuthState(userId: userId);
@@ -260,6 +272,34 @@ class AuthController extends Notifier<AuthState> {
     String? token,
   }) {
     ref.read(apiClientProvider).tryPostJson(path, body: body, token: token);
+  }
+
+  /// Auth server fire-and-forget (register/login): memuat token sesi dari
+  /// balasan `2xx` lalu menyimpannya — endpoint butuh-otorisasi (`/ai`,
+  /// `/rates`, `/feedback`, `/sync`) memakai token ini (bukan token lokal).
+  ///
+  /// Register saat akun sudah ada di server (409 / tanpa token) otomatis
+  /// dicoba ulang sebagai `/auth/login` agar token tetap diperoleh.
+  Future<void> _serverAuth({
+    required String path,
+    Map<String, Object?> body = const <String, Object?>{},
+  }) async {
+    final client = ref.read(apiClientProvider);
+    var response = await client.postJson(path, body: body);
+    Object? token = response.body?['token'];
+    if (path == '/auth/register' && (token is! String || token.isEmpty)) {
+      response = await client.postJson(
+        '/auth/login',
+        body: <String, Object?>{
+          'email': body['email'],
+          if (body['password'] != null) 'password': body['password'],
+        },
+      );
+      token = response.body?['token'];
+    }
+    if (response.ok && token is String && token.isNotEmpty) {
+      await ref.read(authStoreProvider).writeServerToken(token);
+    }
   }
 }
 

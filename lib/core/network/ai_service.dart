@@ -139,11 +139,9 @@ class AiService {
   }
 }
 
-/// Token sesi berjalan untuk endpoint `/ai/*` (requireAuth).
-Future<String?> aiToken(Ref ref) async {
-  final session = await ref.read(authStoreProvider).readSession();
-  return session?.token;
-}
+/// Token sesi untuk endpoint `/ai/*` (requireAuth): token server dulu,
+/// cadangan token lokal (offline / test host).
+Future<String?> aiToken(Ref ref) => onlineToken(ref);
 
 final aiServiceProvider = Provider<AiService>((ref) {
   return AiService(client: ref.watch(apiClientProvider));

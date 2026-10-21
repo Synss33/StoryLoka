@@ -7,7 +7,7 @@
 > **Aturan pembaruan:** centang/ubah file ini **setiap akhir sesi kerja**
 > atau setiap modul selesai, lalu commit bersama hasil kerja.
 
-**Terakhir diperbarui:** 2026-10-17 · **Branch aktif:** `feature/wf-10-testing` (WF-01…WF-09 sudah di-merge @ `develop`)
+**Terakhir diperbarui:** 2026-10-21 · **Branch aktif:** `develop` (WF-01…WF-10 sudah di-merge)
 
 ## Status Ringkas
 
@@ -411,3 +411,15 @@ docs/workflow_proyek.md      Bagian 6: Status ☑ ×29 + catatan performa
 - Backend `node src/server.js` jalan di PC; **HP berhasil mengakses** `http://192.168.1.71:3000/health` (curl dari device sukses — akses jaringan HP→PC tidak lagi terblokir, berbeda catatan 2026-10-16).
 - **Belum diverifikasi visual:** screenshot `screencap` hitam karena layar kunci HP (PIN/pola pengguna); verifikasi UI via `uiautomator dump` hanya sampai jendela aplikasi. **Langkah manual:** buka HP → SCR-01 → tap **"Masuk Demo (data contoh)"** → Beranda/koleksi terisi.
 - Screenshot Light & Dark SCR-01…17 (WF-11) tetap menunggu HP terbuka.
+
+---
+
+## 🌐 2026-10-21 — Mode online diperbaiki (token server) + bug games & peta
+
+- **Mode online** (keputusan **54**): token sesi server kini disimpan dari balasan `POST /auth/register|login` (`AuthStore.writeServerToken`, key `storyloka.serverToken`) dan dipakai **6 titik pemakaian** (`/ai`, `/rates`×2, `/sync`, `/feedback`×2, kartu AI, layar AI) via helper `onlineToken` = **server ?? lokal**; register 409 (akun sudah ada) otomatis diulang `/auth/login`. **Akar gejala "Galat sesi" di HP:** app mengirim token lokal, backend memvalidasi sesi buatannya sendiri → 401. Panggilan tetap fire-and-forget (offline-first utuh).
+- **Config 1 file** (keputusan **55**): `lib/core/config/app_config.dart` (`AppConfig.apiBaseUrl` dari `--dart-define=API_BASE_URL`); clone di perangkat lain cukup ubah 1 baris → build. README bagian "Mode online" diperbarui.
+- **Bug games** (SCR-04 + SCR-16): (a) `_finishRound()` kini `ref.invalidate(gameSummaryProvider)` + `profileStatsProvider` — rekor/koin segmen Game & Profil langsung segar setelah ronde (tanpa kill app); (b) `buildRound` kini **shuffle opsi jawaban** + hitung ulang `correctIndex` (sebelumnya selalu A) — test shuffle di `test/game_test.dart` (4 seed).
+- **Ketahanan peta** (keputusan **56**): state gagal dipisah (`gpsError` vs `error`) + tombol coba-lagi masing-masing, GPS timeout 20 dtk, Overpass **utama → mirror Kumi**, cache `places_cache.json` + label "Menampilkan data offline".
+- **Toolchain Android dikembalikan AGP 9.1.0/Gradle 9.3.1** (keputusan **57**) — commit anggota "add web support" 8a7fd9c menurunkan ke AGP 8.11.1 → `flutter build apk` gagal di `:image_picker_android`; web tidak terpengaruh.
+- **Verifikasi:** `flutter test` **100/100** (9 test baru `test/online_mode_test.dart`: token server, fallback 409, Overpass+cache, invalidate rekor) · `flutter analyze` bersih · APK release arm64 **37,5 MB** (`DEMO_MODE=true`, `API_BASE_URL=http://192.168.1.71:3000`) **terpasang & diluncurkan** di HP Realme C2 (MainActivity top-most, tanpa crash).
+- **Tertunda (butuh user):** verifikasi interaktif di HP (kurs, peta, skor game, AI) — layar terkunci PIN/pola; **AI butuh `backend/.env` isi `GEMINI_API_KEY`** (file belum ada → backend membalas "Layanan AI belum tersedia"); hosting cloud menunggu keputusan anggota (keputusan tetap 53+54).
