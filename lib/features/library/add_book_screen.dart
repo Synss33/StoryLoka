@@ -10,12 +10,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimensions.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/book_status.dart';
+import '../../core/utils/isbn.dart';
 import '../../core/widgets/buttons.dart';
 import '../../core/widgets/book_cover.dart';
 import '../../core/widgets/top_bar.dart';
 import '../auth/auth_controller.dart';
 import '../home/home_data.dart';
 import '../profile/photo_service.dart';
+import 'isbn_scanner.dart';
 import 'library_data.dart';
 
 /// SCR-07 — Tambah / Edit Buku (F-10, F-20 · WF-05).
@@ -53,6 +55,9 @@ class _AddBookScreenState extends ConsumerState<AddBookScreen> {
   bool _saving = false;
   String? _error;
   bool _loaded = false;
+
+  /// State lookup ISBN (F-20): spinner tombol Scan selagi cari online.
+  bool _lookingUpIsbn = false;
 
   @override
   void initState() {
@@ -122,6 +127,72 @@ class _AddBookScreenState extends ConsumerState<AddBookScreen> {
         _coverUrl.clear();
       });
     }
+  }
+
+  /// F-20 · SCR-07: buka pemindai barcode → validasi checksum → isi
+  /// field ISBN → lookup online `isbn:…` untuk melengkapi detail.
+  ///
+  /// Batal (`null`) diabaikan; barcode non-ISBN ditolak dengan pesan;
+  /// lookup gagal/offline menyisakan ISBN + pesan isi-manual (offline-first).
+  Future<void> _scanIsbn() async {
+    final code = await ref.read(isbnScannerProvider).scan(context);
+    if (code == null || !mounted) return;
+
+    final isbn = normalizeIsbn(code);
+    if (!isValidIsbn(isbn)) {
+      _snack('Barcode terbaca, tetapi bukan ISBN yang valid.');
+      return;
+    }
+
+    setState(() {
+      _isbn.text = isbn;
+      _lookingUpIsbn = true;
+    });
+
+    try {
+      final results =
+          await ref.read(bookSearchServiceProvider).search('isbn:$isbn');
+      if (!mounted) return;
+      if (results.isEmpty) {
+        _snack('ISBN tersimpan — data online tidak ditemukan. Isi detail manual.');
+      } else {
+        _fillFromLookup(results.first);
+        _snack('Detail buku diisi dari ${results.first.source}.');
+      }
+    } catch (_) {
+      if (mounted) _snack('ISBN tersimpan — layanan online tidak terjangkau.');
+    } finally {
+      if (mounted) setState(() => _lookingUpIsbn = false);
+    }
+  }
+
+  /// Isi **field yang masih kosong** dari hasil lookup; input yang sudah
+  /// diisi pengguna tidak ditimpa (ISBN sendiri sudah diisi di atas).
+  void _fillFromLookup(OnlineBookResult result) {
+    setState(() {
+      if (_title.text.trim().isEmpty) _title.text = result.title;
+      if (_author.text.trim().isEmpty) _author.text = result.author;
+      if (_publisher.text.trim().isEmpty) {
+        _publisher.text = result.publisher ?? '';
+      }
+      if (_year.text.trim().isEmpty) {
+        _year.text = result.year?.toString() ?? '';
+      }
+      if (_genre.text.trim().isEmpty) _genre.text = result.genre ?? '';
+      if (_pages.text.trim().isEmpty) {
+        _pages.text = result.pages?.toString() ?? '';
+      }
+      if (_coverUrl.text.trim().isEmpty && _coverPath == null) {
+        _coverUrl.text = result.cover ?? '';
+      }
+    });
+  }
+
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Simpan: validasi → insert/update → tandai dirty → kembali (TC-12).
@@ -228,6 +299,64 @@ class _AddBookScreenState extends ConsumerState<AddBookScreen> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.screenMargin),
             children: [
+              // ---- Pindai barcode (F-20, SCR-07; mode tambah) -----------
+              if (widget.bookId == null) ...[
+                Container(
+                  key: const ValueKey<String>('scan-isbn-card'),
+                  padding: const EdgeInsets.all(AppSpacing.cardPadding),
+                  decoration: BoxDecoration(
+                    color: p.primary50,
+                    borderRadius: AppRadius.mediumAll,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pindai Barcode ISBN',
+                              style: AppTypography.body1.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: p.primary600,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.micro),
+                            Text(
+                              'Gunakan kamera untuk menambah buku cepat',
+                              style: AppTypography.caption
+                                  .copyWith(color: p.neutral500),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.cardGap),
+                      // FilledButton eksplisit (bukan PrimaryButton):
+                      // theme memakai Size.fromHeight (lebar infinite) yang
+                      // tidak sah di dalam Row.
+                      FilledButton(
+                        key: const ValueKey<String>('scan-isbn'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(72, AppLayout.buttonHeight),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.cardPadding,
+                          ),
+                        ),
+                        onPressed: _lookingUpIsbn ? null : _scanIsbn,
+                        child: _lookingUpIsbn
+                            ? const SizedBox.square(
+                                dimension: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Scan'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.cardGap),
+              ],
+
               // ---- Sampul --------------------------------------------------
               Center(
                 child: InkWell(

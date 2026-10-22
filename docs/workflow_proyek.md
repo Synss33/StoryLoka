@@ -200,10 +200,13 @@ storyloka/
 | TC-27 | WF-08 | Tamper | Ubah data blok manual | Validasi Tidak Valid (menunjuk blok) | ☑ |
 | TC-28 | WF-09 | Kuis | Selesaikan 10 soal | Skor & koin tersimpan | ☑ |
 | TC-29 | WF-03 | Offline lalu sinkron | Tambah buku offline → online | Data terkirim ke server | ☑ |
+| TC-30 | WF-05 | Pindai barcode ISBN (F-20, opsional) | Tap Scan → pindai/hasil tiruan | Form terisi otomatis (ISBN tervalidasi + lookup `isbn:`); offline → ISBN tersimpan + isi manual | ☑ |
 
 **Performance testing:** waktu start aplikasi, waktu muat 200 buku, waktu respons AI, pemakaian memori (catat di tabel laporan).
 
 > **Status TC (WF-10, 2026-10-17):** seluruh TC-01…TC-29 **lulus lewat test otomatis** (`flutter test` 88 test; nama test memuat ID TC). TC yang membutuhkan sensor/perangkat (TC-06/07 biometrik, TC-19/20 shake, TC-21 sensor cahaya, TC-22 izin GPS, TC-23 notifikasi, TC-15 latar belakang) diverifikasi lewat abstraksi/seam yang disimulasikan di test; **verifikasi manual di HP Realme C2** dilakukan saat demo akhir.
+>
+> **Status TC-30 (2026-10-21, F-20 scan ISBN):** 4 test di `test/library_flow_test.dart` lulus (happy path → form terisi dari lookup `isbn:`; batal; barcode bukan ISBN → ditolak; offline → ISBN tersimpan + pesan isi-manual) + checksum di `test/isbn_test.dart` — kamera disimulasikan lewat abstraksi `IsbnScanner` (tanpa `MobileScanner` di test).
 >
 > **Angka performance (host Windows — `test/performance_test.dart`):** PBKDF2 hash+verify 210k ≈ 11,9 dtk · insert 1 buku 95 ms · query 200 buku 45 ms · filter genre 6 ms · buildRound 56 ms · splash → Beranda 6,9 dtk. **Di HP (diukur manual):** waktu start, respons AI, pemakaian memori — diisi saat demo.
 

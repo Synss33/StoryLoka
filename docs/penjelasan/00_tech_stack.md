@@ -26,7 +26,7 @@
 | Bagikan sertifikat | **share_plus 13.3.1** | PNG sertifikat dari `RepaintBoundary.toImage` (K-44). |
 | Launcher URL | **url_launcher 6.3.3** | Buka Pengaturan/tautan eksternal. |
 | Font | **Inter (di-bundle `assets/fonts/`, 4 weight)** | Deterministik & offline — bukan paket `google_fonts` (K-10). |
-| Barcode (opsional) | **mobile_scanner** *(belum dipakai — F-20 opsional)* | Pindai ISBN bila waktu cukup. |
+| Barcode (opsional) | **mobile_scanner 7.4.2** *(aktif — F-20 scan ISBN, K-58)* | Pindai barcode ISBN di SCR-07 lewat abstraksi `IsbnScanner`. |
 
 ### Perangkat & build
 - **Android SDK**: `platforms;android-35 & 36`, `build-tools;36.0.0`, `ndk;28.2.13676358`, `cmake;3.22.1` (K-12).

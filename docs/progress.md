@@ -423,3 +423,13 @@ docs/workflow_proyek.md      Bagian 6: Status ☑ ×29 + catatan performa
 - **Toolchain Android dikembalikan AGP 9.1.0/Gradle 9.3.1** (keputusan **57**) — commit anggota "add web support" 8a7fd9c menurunkan ke AGP 8.11.1 → `flutter build apk` gagal di `:image_picker_android`; web tidak terpengaruh.
 - **Verifikasi:** `flutter test` **100/100** (9 test baru `test/online_mode_test.dart`: token server, fallback 409, Overpass+cache, invalidate rekor) · `flutter analyze` bersih · APK release arm64 **37,5 MB** (`DEMO_MODE=true`, `API_BASE_URL=http://192.168.1.71:3000`) **terpasang & diluncurkan** di HP Realme C2 (MainActivity top-most, tanpa crash).
 - **Tertunda (butuh user):** verifikasi interaktif di HP (kurs, peta, skor game, AI) — layar terkunci PIN/pola; **AI butuh `backend/.env` isi `GEMINI_API_KEY`** (file belum ada → backend membalas "Layanan AI belum tersedia"); hosting cloud menunggu keputusan anggota (keputusan tetap 53+54).
+
+---
+
+## 📦 2026-10-21 — F-20 Scan Barcode ISBN (SCR-07)
+
+- **Fitur opsional F-20** diaktifkan (sudah tercatat di deskripsi baris 112 & desain SCR-07; keputusan **58**): kartu **"Pindai Barcode ISBN"** di atas form Tambah Buku (mode tambah) → layar full-screen `/scan-isbn` (`mobile_scanner` 7.4.2, viewfinder overlay, deteksi sekali, state izin-ditolak terpisah) → **checksum `isValidIsbn`** (ISBN-13/10, `core/utils/isbn.dart`) → lookup `BookSearchService.search('isbn:…')` (Google Books → Open Library, tanpa API key) → **field yang masih kosong diisi** (input pengguna tidak ditimpa); offline/ tanpa hasil → **ISBN tetap tersimpan** + snackbar isi-manual.
+- **Abstraksi `IsbnScanner`** (`isbn_scanner_provider`, pola `PhotoPicker`) → test tanpa kamera; `FilledButton` ber-ukuran tetap di dalam Row (theme `Size.fromHeight` tak sah untuk flex horizontal); izin `CAMERA` sudah ada di manifest — tanpa perubahan platform.
+- **Verifikasi:** `test/isbn_test.dart` **6** (checksum valid/tolak/normalisasi) + **TC-30** 4 test di `library_flow_test.dart` (happy path, batal, barcode bukan ISBN, offline) → **`flutter test` semua lulus** · `flutter analyze` bersih.
+- **Dokumen:** workflow Bagian 6 + **TC-30** ☑ · keputusan **58** · `penjelasan/00_tech_stack` (mobile_scanner aktif), `20_komentar_per_file` (+2 file), `13_wf05` (alur & tabel file).
+- **Sisa:** build APK + verifikasi kamera di HP (butuh layar terbuka & buku berbarcode); bagian F-20 "lampirkan teks ke AI" (SCR-05) **di luar lingkup sesi ini** (keputusan user).

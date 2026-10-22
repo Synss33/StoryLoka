@@ -16,6 +16,7 @@ import 'package:storyloka/core/security/session.dart';
 import 'package:storyloka/features/auth/auth_store.dart';
 import 'package:storyloka/features/auth/biometric_service.dart';
 import 'package:storyloka/features/auth/user_repository.dart';
+import 'package:storyloka/features/library/isbn_scanner.dart';
 import 'package:storyloka/features/reading_session/session_timer.dart';
 
 /// Biometrik palsu agar layar tidak menggantung (lihat widget_test.dart).
@@ -41,9 +42,27 @@ class _FakeSearch implements BookSearchService {
       ];
 }
 
+/// Lookup online tanpa hasil — untuk jalur fallback offline TC-30.
+class _EmptySearch implements BookSearchService {
+  @override
+  Future<List<OnlineBookResult>> search(String query) async =>
+      const <OnlineBookResult>[];
+}
+
+/// Pemindai barcode tiruan — tanpa kamera/rute (TC-30, F-20).
+class _FakeScanner implements IsbnScanner {
+  _FakeScanner(this.result);
+
+  /// Hasil pindaian; `null` = pengguna membatalkan.
+  final String? result;
+
+  @override
+  Future<String?> scan(BuildContext context) async => result;
+}
+
 /// Test case WF-05: TC-12 (tambah buku), TC-13 (pilih hasil online),
 /// TC-14 (filter), TC-15 (stopwatch timestamp), TC-16 (sesi → selesai
-/// dengan ulasan wajib).
+/// dengan ulasan wajib), TC-30 (pindai barcode ISBN, F-20).
 void main() {
   late InMemoryAuthStore store;
   late Database db;
@@ -74,7 +93,11 @@ void main() {
     }
   });
 
-  Future<void> pumpApp(WidgetTester tester) async {
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    BookSearchService? search,
+    IsbnScanner? scanner,
+  }) async {
     final user = await tester.runAsync(
       () => UserRepository(db).register(
         name: 'Pengguna Uji',
@@ -92,7 +115,10 @@ void main() {
           authStoreProvider.overrideWithValue(store),
           databaseProvider.overrideWith((ref) async => db),
           biometricServiceProvider.overrideWithValue(_NoBiometric()),
-          bookSearchServiceProvider.overrideWithValue(_FakeSearch()),
+          bookSearchServiceProvider
+              .overrideWithValue(search ?? _FakeSearch()),
+          if (scanner != null)
+            isbnScannerProvider.overrideWithValue(scanner),
         ],
         child: const StorylokaApp(),
       ),
@@ -222,6 +248,118 @@ void main() {
       find.widgetWithText(TextFormField, '360'),
       findsOneWidget,
       reason: 'jumlah halaman terisi otomatis',
+    );
+  });
+
+  testWidgets(
+      'TC-30: pindai barcode ISBN → form terisi otomatis dari lookup',
+      (tester) async {
+    await pumpApp(tester, scanner: _FakeScanner('9780306406157'));
+
+    appRouter.go('/book/edit');
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey<String>('scan-isbn-card')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey<String>('scan-isbn')));
+    await tester.pumpAndSettle();
+
+    // Detail dilengkapi dari lookup online (fake balik 'Sang Pemimpi').
+    expect(
+      find.widgetWithText(TextFormField, 'Sang Pemimpi'),
+      findsOneWidget,
+      reason: 'judul terisi otomatis dari hasil lookup isbn:',
+    );
+    expect(
+      find.widgetWithText(TextFormField, 'Andrea Hirata'),
+      findsOneWidget,
+      reason: 'penulis terisi otomatis dari hasil lookup isbn:',
+    );
+    expect(find.textContaining('Google Books'), findsOneWidget,
+        reason: 'snackbar menyebut sumber data');
+
+    // Field ISBN ada di tengah form — gulir agar ter-build (SliverList lazy;
+    // field di atas ikut terbuang, jadi diexpect sebelum scroll).
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('field-isbn')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    // ISBN terisi langsung dari hasil pindaian (sudah tervalidasi).
+    expect(
+      find.widgetWithText(TextFormField, '9780306406157'),
+      findsOneWidget,
+      reason: 'field ISBN terisi kode pindaian',
+    );
+  });
+
+  testWidgets('TC-30 (batal): scan dibatalkan → form tidak berubah',
+      (tester) async {
+    await pumpApp(tester, scanner: _FakeScanner(null));
+
+    appRouter.go('/book/edit');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey<String>('scan-isbn')));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextFormField, 'Sang Pemimpi'), findsNothing);
+    expect(find.text('9780306406157'), findsNothing);
+  });
+
+  testWidgets('TC-30 (bukan ISBN): barcode tidak lolos checksum → ditolak',
+      (tester) async {
+    await pumpApp(tester, scanner: _FakeScanner('ABC-123'));
+
+    appRouter.go('/book/edit');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey<String>('scan-isbn')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Barcode terbaca, tetapi bukan ISBN yang valid.'),
+      findsOneWidget,
+    );
+    expect(find.text('9780306406157'), findsNothing);
+    expect(find.widgetWithText(TextFormField, 'Sang Pemimpi'), findsNothing);
+  });
+
+  testWidgets(
+      'TC-30 (offline): lookup tanpa hasil → ISBN tersimpan + isi manual',
+      (tester) async {
+    await pumpApp(
+      tester,
+      scanner: _FakeScanner('9780306406157'),
+      search: _EmptySearch(),
+    );
+
+    appRouter.go('/book/edit');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey<String>('scan-isbn')));
+    await tester.pumpAndSettle();
+
+    // Gulir ke field ISBN agar ter-build (SliverList lazy).
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey<String>('field-isbn')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(TextFormField, '9780306406157'),
+      findsOneWidget,
+      reason: 'ISBN tetap tersimpan walau lookup gagal',
+    );
+    expect(find.widgetWithText(TextFormField, 'Sang Pemimpi'), findsNothing);
+    expect(
+      find.text(
+        'ISBN tersimpan — data online tidak ditemukan. Isi detail manual.',
+      ),
+      findsOneWidget,
     );
   });
 

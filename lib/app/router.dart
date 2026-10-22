@@ -12,6 +12,7 @@ import '../features/feedback/feedback_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/add_book_screen.dart';
 import '../features/library/library_screen.dart';
+import '../features/library/scan_isbn_screen.dart';
 import '../features/notifications/notifications_screen.dart';
 import '../features/profile/edit_profile_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -137,6 +138,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/game',
       builder: (context, state) => const GameScreen(), // SCR-16
+    ),
+    // Pemindai barcode ISBN — layar opsional dari SCR-07 (F-20);
+    // pop mengembalikan teks barcode (`String`) atau `null` (batal).
+    GoRoute(
+      path: '/scan-isbn',
+      builder: (context, state) => const ScanIsbnScreen(),
     ),
     GoRoute(
       path: '/profile/edit',

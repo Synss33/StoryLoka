@@ -161,6 +161,7 @@ Indeks seluruh source code proyek Storyloka: **peran satu kalimat + komentar dok
 | `library/add_book_screen.dart` | Tambah/edit buku SCR-07 | `:21` "SCR-07 — Tambah / Edit Buku (F-10, F-20 · WF-05)" | WF-05 |
 | `library/book_tile.dart` | Kartu buku grid/list | `:45` "Kartu buku grid 2 kolom SCR-03"; `:11` baris rating | WF-05 |
 | `library/filter_sheet.dart` | Bottom sheet filter & sort | `:11` "Bottom sheet filter & sort SCR-08" | WF-05 |
+| `library/isbn_scanner.dart` | Pemindai barcode (abstraksi) | `:5` "Abstraksi pemindai barcode ISBN (F-20 · SCR-07)" + `isbnScannerProvider` | WF-05 |
 | `library/library_data.dart` | Model filter/tab pencarian | `:32` "Filter & pencarian buku yang dipakai SCR-03 dan SCR-08"; `:21` tab | WF-05 |
 | `library/library_screen.dart` | Library SCR-03 | `:19` "SCR-03 — Library: Koleksi & Wishlist (F-10, WF-05)" | WF-05 |
 | `notifications/notifications_data.dart` | Riwayat SCR-14 | `:7` "Riwayat notifikasi milik pengguna aktif — SCR-14" | WF-06 |
@@ -172,6 +173,7 @@ Indeks seluruh source code proyek Storyloka: **peran satu kalimat + komentar dok
 | `profile/profile_stats.dart` | Statistik ringkas | `:7` "Statistik ringkas profil (SCR-09)" | WF-04 |
 | `reading_session/reading_session_screen.dart` | Sesi baca SCR-15 | `:36` "SCR-15 — Sesi Membaca (Stopwatch) (F-19, WF-05)"; `:154` simpan sesi | WF-05 |
 | `reading_session/session_timer.dart` | Stopwatch timestamp | `:1` "Stopwatch sesi membaca berbasis **timestamp** (F-19, SCR-15)" | WF-05 |
+| `library/scan_isbn_screen.dart` | Layar scan barcode | `:8` "SCR-07 — Layar pemindai barcode ISBN (F-20 · WF-05)" — viewfinder overlay, deteksi sekali, izin ditolak | WF-05 |
 | `search/search_data.dart` | State pencarian online | `:10` "Kata kunci pencarian online (SCR-08 tab 'Cari Online')"; `:32` simpan hasil | WF-05 |
 | `search/search_screen.dart` | Pencarian SCR-08 | `:18` "SCR-08 — Pencarian & Filter (F-10, WF-05)" | WF-05 |
 
